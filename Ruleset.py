@@ -60,6 +60,7 @@ class Moves():
             #Check if the piece can be moved to the top-right
             possible_transforms.append( (-1,1) )
         return Moves.transform_check(self.location, possible_transforms)
+    
     def RookMoves(self):
         #Rooks move just like rooks in Chess, they can move to any square on the same rank or file as them
         possible_transforms = []
@@ -67,33 +68,139 @@ class Moves():
         n = 1
         move_directions = [True,True,True,True]
         while True in move_directions:
-            if move_directions[0] == True:
-                #Check if the rook can be moved up
-                if self.gamestate[x-n][y] != "N/A":
-                    possible_transforms.append ( (-n , 0 ) )
-                    if self.gamestate[x-n][y] != "-":
-                        move_directions[0] = False
+            if not(x - n < 0):
+                if move_directions[0] == True:
+                    #Check if the rook can be moved up
+                    if self.gamestate[x-n][y] != "N/A":
+                        possible_transforms.append ( (-n , 0 ) )
+                        if self.gamestate[x-n][y] != "-":
+                            move_directions[0] = False
+                    
+            else:
+                move_directions[0] = False
 
-            if move_directions[1] == True:
-                #Check if the rook can be moved down
-                if self.gamestate[x+n][y] != "N/A":
-                    possible_transforms.append ( (n , 0 ) )
-                    if self.gamestate[x+n][y] != "-":
-                        move_directions[1] = False
-                        
-            if move_directions[2] == True:
-                #Check if the rook can be moved left
-                if self.gamestate[x][y-n] != "N/A":
-                    possible_transforms.append ( (0 , -n ) )
-                    if self.gamestate[x][y-n] != "-":
-                        move_directions[2] = False
+            if not(x + n > 9):
+                if move_directions[1] == True:
+                    #Check if the rook can be moved down
+                    if self.gamestate[x+n][y] != "N/A":
+                        possible_transforms.append ( (n , 0 ) )
+                        if self.gamestate[x+n][y] != "-":
+                            move_directions[1] = False
+                    
+            else:
+                move_directions[1] = False
 
-            if move_directions[3] == True:
-                #Check if the rook can be moved right
-                if self.gamestate[x][y+n] != "N/A":
-                    possible_transforms.append ( (0 , n ) )
-                    if self.gamestate[x][y+n] != "-":
-                        move_directions[3] = False
+            if not(y - n < 0):    
+                if move_directions[2] == True:
+                    #Check if the rook can be moved left
+                    if self.gamestate[x][y-n] != "N/A":
+                        possible_transforms.append ( (0 , -n ) )
+                        if self.gamestate[x][y-n] != "-":
+                            move_directions[2] = False
+                    
+            else:
+                move_directions[2] = False
+
+            if not(y + n > 12):
+                if move_directions[3] == True:
+                    #Check if the rook can be moved right
+                    if self.gamestate[x][y+n] != "N/A":
+                        possible_transforms.append ( (0 , n ) )
+                        if self.gamestate[x][y+n] != "-":
+                            move_directions[3] = False
+                    
+            else:
+                move_directions[3] = False
+                
+            n += 1
+        return Moves.transform_check(self.location, possible_transforms)
+
+    def ScoutMoves(self):
+        #Scouts move like bishops in regular Chess but it always skips the first square
+        possible_transforms = []
+        x,y = self.location[0],self.location[1]
+        n = 2
+        move_directions = [True,True,True,True]
+        while True in move_directions:
+            if not(x - n < 0) and not(y - n < 0) :
+            #Check if the scout can be moved up-leftwards
+                if move_directions[0] == True:
+                    if self.gamestate[x - n][y - n] != "N/A":
+                        possible_transforms.append ( (-n , -n ) )
+                        if self.gamestate[x - n][y - n] != "-":
+                            move_directions[0] = False
+            else:
+                move_directions[0] = False
+
+            if not(x - n < 0) and not(y + n > 12) :
+            #Check if the scout can be moved up-rightwards
+                if move_directions[1] == True:
+                    if self.gamestate[x - n][y + n] != "N/A":
+                        possible_transforms.append ( (-n , n) )
+                        if self.gamestate[x - n][y + n] != "-":
+                            move_directions[1] = False
+            else:
+                move_directions[1] = False
+                
+            if not(x + n > 9) and not(y - n < 0) :
+            #Check if the scout can be moved down-leftwards
+                if move_directions[2] == True:
+                    if self.gamestate[x + n][y - n] != "N/A":
+                        possible_transforms.append ( (n , -n ) )
+                        if self.gamestate[x + n][y - n] != "-":
+                            move_directions[2] = False
+            else:
+                move_directions[2] = False
+                
+            if not(x + n > 9) and not(y + n > 12) :
+            #Check if the scout can be moved down-rightwards
+                if move_directions[3] == True:
+                    if self.gamestate[x + n][y + n] != "N/A":
+                        possible_transforms.append ( (n , n) )
+                        if self.gamestate[x + n][y + n] != "-":
+                            move_directions[3] = False
+            else:
+                move_directions[3] = False
+
+            n += 1
+        return Moves.transform_check(self.location, possible_transforms)
+
+    def DabbabaMoves(self):
+        #Dabbaba can jump 2 spaces orthogonally
+        possible_transforms = []
+        x,y = self.location[0],self.location[1]
+        n = 2
+        if x != 0 and self.gamestate[x - n][y ] != "N/A":
+            #Check if the piece can be moved upwards
+            possible_transforms.append( (-n , 0) )
+        if x != 9 and self.gamestate[x + n][y ] != "N/A":
+            #Check if the piece can be moved downwards
+            possible_transforms.append( (n , 0) )
+        if y != 0 and self.gamestate[x][y - n] != "N/A":
+            #Check if the piece can be moved left
+            possible_transforms.append( (0 , -n) )
+        if y != 12 and self.gamestate[x ][y + n] != "N/A":
+            #Check if the piece can be moved right
+            possible_transforms.append( (0 , n) )
+        return Moves.transform_check(self.location, possible_transforms)
+    
+    def ElephantMoves(self):
+        #Elephant can jump 2 spaces diagonally
+        possible_transforms = []
+        x,y = self.location[0],self.location[1]
+        n = 2
+        if x != 0 and y != 0 and self.gamestate[x-n][y-n] != "N/A":
+            #Check if the piece can be moved to the top-left
+            possible_transforms.append( (-n,-n) )
+        if x != 0 and y != 12 and self.gamestate[x-n][y+n] != "N/A":
+            #Check if the piece can be moved to the top-right
+            possible_transforms.append( (-n,n) )
+        if x != 9 and y != 12 and self.gamestate[x+n][y+n] != "N/A":
+            #Check if the piece can be moved to the bottom-right
+            possible_transforms.append( (n,n) )
+        if x != 9 and y != 0 and self.gamestate[x+n][y-n] != "N/A":
+            #Check if the piece can be moved to the bottom-left
+            possible_transforms.append( (n,-n) )
         return Moves.transform_check(self.location, possible_transforms)
     
     def transform_check(location, transforms):
