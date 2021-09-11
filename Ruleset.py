@@ -202,7 +202,131 @@ class Moves():
             #Check if the piece can be moved to the bottom-left
             possible_transforms.append( (n,-n) )
         return Moves.transform_check(self.location, possible_transforms)
+
+    def HorseMoves(self):
+        #Horses moves like the Knights in chess, moves in an L shape
+        possible_transforms = []
+        x,y = self.location[0],self.location[1]
+        orth_n = 2
+        diag_n = 1
+        orth_transforms = [ [0 , orth_n] , [0 , -orth_n], [orth_n , 0] , [-orth_n , 0] ] #Storing the four orthagonal directions the horse can move in
+        for x in range (0,4):
+            zero_loc = orth_transforms[x].index( 0 )
+            #Finding the two spots it can move to in each direction
+            diag_transform =  [ orth_transforms[x] , orth_transforms[x] ]
+            diag_transform[0][zero_loc] = 1
+            diag_transform[0] = tuple(diag_transform[0])
+            diag_transform[1][zero_loc] = -1
+            diag_transform[1] = tuple(diag_transform[1])
+            for transform in diag_transform:
+                #Checking if the horse can be moved to the two spots
+                if x + transform[0] >= 0 and x + transform[0] <= 9 and y + transform[1] >= 0 and y + transform[1] <= 12:
+                    if self.gamestate[ x + transform[0] ][ y + transform[1] ] != "N/A":
+                        possible_transforms.append( transform )
+        return Moves.transform_check(self.location, possible_transforms)
     
+    def CamelMoves(self):
+        #Camels move like horses, but one step further in all orthogonal directions
+        possible_transforms = []
+        x,y = self.location[0],self.location[1]
+        orth_n = 3
+        diag_n = 1
+        orth_transforms = [ [0 , orth_n] , [0 , -orth_n], [orth_n , 0] , [-orth_n , 0] ] #Storing the four orthagonal directions the horse can move in
+        for x in range (0,4):
+            zero_loc = orth_transforms[x].index( 0 )
+            #Finding the two spots it can move to in each direction
+            diag_transform =  [ orth_transforms[x] , orth_transforms[x] ]
+            diag_transform[0][zero_loc] = 1
+            diag_transform[0] = tuple(diag_transform[0])
+            diag_transform[1][zero_loc] = -1
+            diag_transform[1] = tuple(diag_transform[1])
+            for transform in diag_transform:
+                #Checking if the horse can be moved to the two spots
+                if x + transform[0] >= 0 and x + transform[0] <= 9 and y + transform[1] >= 0 and y + transform[1] <= 12:
+                    if self.gamestate[x + transform[0] ][ y + transform[1] ] != "N/A":
+                        possible_transforms.append( transform )
+        return Moves.transform_check(self.location, possible_transforms)
+    
+    def GiraffeMoves(self):
+        #Giraffes first move one step diagonally, then three or more spaces orthagonally
+        #First check the diagonal transforms
+        possible_transforms = []
+        x,y = self.location[0],self.location[1]
+        diag_transforms = []
+        if x != 0 and y != 0 and self.gamestate[x-1][y-1] != "N/A":
+            #Check if the piece can be moved to the top-left
+            diag_transforms.append( (-1,-1) )
+        if x != 0 and y != 12 and self.gamestate[x-1][y+1] != "N/A":
+            #Check if the piece can be moved to the top-right
+            diag_transforms.append( (-1,1) )
+        if x != 9 and y != 12 and self.gamestate[x+1][y+1] != "N/A":
+            #Check if the piece can be moved to the bottom-right
+            diag_transforms.append( (1,1) )
+        if x != 9 and y != 0 and self.gamestate[x+1][y-1] != "N/A":
+            #Check if the piece can be moved to the bottom-left
+            diag_transforms.append( (1,-1) )
+    
+        n = 2    
+        for transform in diag_transforms:
+            #First simulate movement along the column, starting downward
+            new_transform = list(transform)
+            can_move = True
+            if transform[0] > 0:
+                while can_move:
+                    if new_transform[0] != 9:
+                        new_transform = ( new_transform[0] + 1, new_transform[1])
+                        if self.gamestate[x + transform[0] ][ y + transform[1] ] != "N/A":
+                            if new_transform[0] >= 4:
+                                possibe_transforms.append(new_transform)
+                            if self.gamestate[x + transform[0] ][ y + transform[1] ] != "-":
+                                can_move = False
+                        else:
+                            can_move = False
+                    else:
+                        can_move = False
+            else:
+                while can_move:
+                    if new_transform[0] != 0:
+                        new_transform = ( new_transform[0] - 1, new_transform[1])
+                        if self.gamestate[x + transform[0] ][ y + transform[1] ] != "N/A":
+                            if new_transform[0] <= -4:
+                                possibe_transforms.append(new_transform)
+                            if self.gamestate[x + transform[0] ][ y + transform[1] ] != "-":
+                                can_move = False
+                        else:
+                            can_move = False
+                    else:
+                        can_move = False    
+            #Next simulate movement along the row, starting rightward
+            new_transform = list(transform)
+            can_move = True
+            if transform[1] > 0:
+                while can_move:
+                    if new_transform[1] != 12:
+                        new_transform = ( new_transform[0] , new_transform[1] + 1)
+                        if self.gamestate[x + transform[0] ][ y + transform[1] ] != "N/A":
+                            if new_transform[1] >= 4:
+                                possibe_transforms.append(new_transform)
+                            if self.gamestate[x + transform[0] ][ y + transform[1] ] != "-":
+                                can_move = False
+                        else:
+                            can_move = False
+                    else:
+                        can_move = False
+            else:
+                while can_move:
+                    if new_transform[1] != 0:
+                        new_transform = ( new_transform[0] , new_transform[1] - 1)
+                        if self.gamestate[x + transform[0] ][ y + transform[1] ] != "N/A":
+                            if new_transform[1] <= -4:
+                                possibe_transforms.append(new_transform)
+                            if self.gamestate[x + transform[0] ][ y + transform[1] ] != "-":
+                                can_move = False
+                        else:
+                            can_move = False
+                    else:
+                        can_move = False
+        return Moves.transform_check(self.location, possible_transforms)
     def transform_check(location, transforms):
         #Applies each given move to a piece to find where it's moved to 
         possible_moves = []
