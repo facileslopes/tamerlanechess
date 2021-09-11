@@ -333,3 +333,12 @@ class Moves():
         for transform in transforms:
             possible_moves.append( (location[0] + transform[0], location[1] + transform[1]) )
         return possible_moves
+    
+    def piece_capturing(location, transforms):
+        new_transforms = []
+        for transform in transforms:
+            color1 = self.gamestate[ location[0] ][ location[1] ][0]
+            color2 = self.gamestate[ location[0] + transform[0] ][ location[1] + transform[1] ][0]
+            if color1 == color2:
+                new_transforms.append(transform)
+        return new_transforms
