@@ -1,7 +1,7 @@
 import Engine
 rows = 10
 columns = 13
-class Moves():
+class Rules():
     def __init__(self,location,gamestate):
         self.location = location
         self.gamestate = gamestate
@@ -327,13 +327,29 @@ class Moves():
                     else:
                         can_move = False
         return Moves.transform_check(self.location, possible_transforms)
+    def PawnOfPawnsRules(self):
+        #The pawn of pawns acts as a regular pawn until it moves to the final square, where it remains until a situation develops
+        #where it guarantee a capture on any piece on the board, then it may be moved there.
+        #When it reaches the end of the board a second time, it is moved to the square it started from
+        #The third time it reaches the end of the board, it becomes a prince
+        
+        pass
+
+    def PrinceMoves(self):
+        #A prince acts like a King, but can be captured
+        pass
+    
+    def KingMoves(self):
+        #Moves like a King in chess
+        pass
+    
     def transform_check(location, transforms):
         #Applies each given move to a piece to find where it's moved to 
         possible_moves = []
         for transform in transforms:
             possible_moves.append( (location[0] + transform[0], location[1] + transform[1]) )
         return possible_moves
-    
+
     def piece_capturing(self, moves):
         #Checks whether a piece is moving into a tile with a piece of the same colour on it
         new_moves = []
@@ -349,3 +365,35 @@ class Moves():
             if color1 != color2:
                 new_moves.append(move)
         return new_moves
+
+    def map_piece_to_rule(self):
+        #Checks the piece to see what rule applies to it
+        piece_identity = self.gamestate[ self.location[0] ][ self.location[1] ]
+        if piece_identity[0] == "p":
+            if piece_identity[2] == "P":
+                return PawnOfPawnsRules(self)
+            else:
+                return PawnMoves(self)
+        else:
+            piece_identity = piece_identity[1]
+            if piece_identity == "C":
+                return CamelMoves(self)
+            elif piece_identity == "D":
+                return DabbabaMoves(self)
+            elif piece_identity == "E":
+                return ElephantMoves(self))
+            elif piece_identity == "R":
+                return RookMoves(self)
+            elif piece_identity == "N":
+                return HorseMoves(self)
+            elif piece_identity == "S":
+                return ScoutMoves(self)
+            elif piece_identity == "G":
+                return GiraffeMoves(self)
+            elif piece_identity == "V":
+                return VizierMoves(self)
+            elif piece_identity == "K":
+                return KingMoves(self)
+            else:
+                return MinisterMoves(self)
+
