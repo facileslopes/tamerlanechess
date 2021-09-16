@@ -31,3 +31,16 @@ def make_move(board,move):
     new_board[move.end_row][move.end_col] = move.piece_moved
     return new_board
                       
+
+def who_is_moving(board,move):
+    #Returns True if a white piece is being moved, else returns False
+    piece = board[move.start_row][move.start_col]
+    if piece[0] == "p":
+        piece = piece[1]
+    else:
+        piece = piece[0]
+
+    if piece == "w":
+        return True
+    if piece == "b":
+        return False
