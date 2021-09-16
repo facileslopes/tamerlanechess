@@ -334,11 +334,18 @@ class Moves():
             possible_moves.append( (location[0] + transform[0], location[1] + transform[1]) )
         return possible_moves
     
-    def piece_capturing(location, transforms):
-        new_transforms = []
-        for transform in transforms:
-            color1 = self.gamestate[ location[0] ][ location[1] ][0]
-            color2 = self.gamestate[ location[0] + transform[0] ][ location[1] + transform[1] ][0]
-            if color1 == color2:
-                new_transforms.append(transform)
-        return new_transforms
+    def piece_capturing(self, moves):
+        #Checks whether a piece is moving into a tile with a piece of the same colour on it
+        new_moves = []
+        if self.gamestate[ self.location[0] ][ self.location[1] ][0] == "p":
+            color1 = self.gamestate[ self.location[0] ][ self.location[1] ][1]
+        else:
+            color1 = self.gamestate[ self.location[0] ][ self.location[1] ][0]
+        for move in moves:
+            if self.gamestate[ move[0] ][ move[1] ][0] == "p":
+                color2 = self.gamestate[ move[0] ][ move[1] ][1]
+            else:
+                color2 = self.gamestate[ move[0] ][ move[1] ][0]
+            if color1 != color2:
+                new_moves.append(move)
+        return new_moves
