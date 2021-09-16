@@ -1,6 +1,7 @@
 #Run this file in order to play the game. This file is responsible for displaying a board for you to interact with.
 import pygame
 import Engine
+import Ruleset
 import time
 import sys
 #Initialising some variables and stuff here
@@ -165,10 +166,10 @@ def main():
                                 clicked_squares.append(sq_loc)
                                 sq_selected = False
                                 move = Engine.Move( clicked_squares[0], clicked_squares[1], Engine.game_state )
-                                Engine.game_state = Engine.make_move( Engine.game_state, move )
+                                if Engine.is_player_white == Engine.who_is_moving (Engine.game_state, move):
+                                    Engine.game_state = Engine.make_move( Engine.game_state, move )
+                                    Engine.is_player_white = not(Engine.is_player_white)
                                 clicked_squares = []
-                                Engine.is_player_white = not(Engine.is_player_white)
-                            
                             
 if __name__ == "__main__":
     main()
