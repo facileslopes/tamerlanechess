@@ -24,7 +24,7 @@ class Rules():
         if y != 12 and self.gamestate[x ][y + 1] != "N/A":
             #Check if the piece can be moved right
             possible_transforms.append( (0 , 1) )
-        return Moves.transform_check(self.location, possible_transforms)
+        return Rules.transform_check(self.location, possible_transforms)
 
     def MinisterMoves(self):
         #Minister can move one space diagonally
@@ -42,7 +42,7 @@ class Rules():
         if x != 9 and y != 0 and self.gamestate[x+1][y-1] != "N/A":
             #Check if the piece can be moved to the bottom-left
             possible_transforms.append( (1,-1) )
-        return Moves.transform_check(self.location, possible_transforms)
+        return Rules.transform_check(self.location, possible_transforms)
     
     def PawnMoves(self):
         #Pawns can only move one step at a time, and can only capture pieces to the top-right and top-left of them.
@@ -52,14 +52,14 @@ class Rules():
         pawn_type = self.gamestate[x][y]
         if self.gamestate[x-1][y] == "-":
             #Check if the space in front of the piece is empty
-            possible_transforms.append( ([x-1][y]) )
+            possible_transforms.append( (-1,0) )
         if x != 0 and y != 0 and self.gamestate[x-1][y-1] != "N/A" and self.gamestate[x-1][y-1] != "-":
             #Check if the piece can be moved to the top-left
             possible_transforms.append( (-1,-1) )
         if x != 0 and y != 12 and self.gamestate[x-1][y-1] != "N/A" and self.gamestate[x-1][y-1] != "-":
             #Check if the piece can be moved to the top-right
             possible_transforms.append( (-1,1) )
-        return Moves.transform_check(self.location, possible_transforms)
+        return Rules.transform_check(self.location, possible_transforms)
     
     def RookMoves(self):
         #Rooks move just like rooks in Chess, they can move to any square on the same rank or file as them
@@ -113,7 +113,7 @@ class Rules():
                 move_directions[3] = False
                 
             n += 1
-        return Moves.transform_check(self.location, possible_transforms)
+        return Rules.transform_check(self.location, possible_transforms)
 
     def ScoutMoves(self):
         #Scouts move like bishops in regular Chess but it always skips the first square
@@ -163,7 +163,7 @@ class Rules():
                 move_directions[3] = False
 
             n += 1
-        return Moves.transform_check(self.location, possible_transforms)
+        return Rules.transform_check(self.location, possible_transforms)
 
     def DabbabaMoves(self):
         #Dabbaba can jump 2 spaces orthogonally
@@ -182,7 +182,7 @@ class Rules():
         if y != 12 and self.gamestate[x ][y + n] != "N/A":
             #Check if the piece can be moved right
             possible_transforms.append( (0 , n) )
-        return Moves.transform_check(self.location, possible_transforms)
+        return Rules.transform_check(self.location, possible_transforms)
     
     def ElephantMoves(self):
         #Elephant can jump 2 spaces diagonally
@@ -201,7 +201,7 @@ class Rules():
         if x != 9 and y != 0 and self.gamestate[x+n][y-n] != "N/A":
             #Check if the piece can be moved to the bottom-left
             possible_transforms.append( (n,-n) )
-        return Moves.transform_check(self.location, possible_transforms)
+        return Rules.transform_check(self.location, possible_transforms)
 
     def HorseMoves(self):
         #Horses moves like the Knights in chess, moves in an L shape
@@ -223,7 +223,7 @@ class Rules():
                 if x + transform[0] >= 0 and x + transform[0] <= 9 and y + transform[1] >= 0 and y + transform[1] <= 12:
                     if self.gamestate[ x + transform[0] ][ y + transform[1] ] != "N/A":
                         possible_transforms.append( transform )
-        return Moves.transform_check(self.location, possible_transforms)
+        return Rules.transform_check(self.location, possible_transforms)
     
     def CamelMoves(self):
         #Camels move like horses, but one step further in all orthogonal directions
@@ -245,7 +245,7 @@ class Rules():
                 if x + transform[0] >= 0 and x + transform[0] <= 9 and y + transform[1] >= 0 and y + transform[1] <= 12:
                     if self.gamestate[x + transform[0] ][ y + transform[1] ] != "N/A":
                         possible_transforms.append( transform )
-        return Moves.transform_check(self.location, possible_transforms)
+        return Rules.transform_check(self.location, possible_transforms)
     
     def GiraffeMoves(self):
         #Giraffes first move one step diagonally, then three or more spaces orthagonally
@@ -326,7 +326,7 @@ class Rules():
                             can_move = False
                     else:
                         can_move = False
-        return Moves.transform_check(self.location, possible_transforms)
+        return Rules.transform_check(self.location, possible_transforms)
     def PawnOfPawnsRules(self):
         #The pawn of pawns acts as a regular pawn until it moves to the final square, where it remains until a situation develops
         #where it guarantee a capture on any piece on the board, then it may be moved there.
@@ -344,7 +344,7 @@ class Rules():
         pass
     
     def transform_check(location, transforms):
-        #Applies each given move to a piece to find where it's moved to 
+        #Applies each given move to a piece to find where it's moved to
         possible_moves = []
         for transform in transforms:
             possible_moves.append( (location[0] + transform[0], location[1] + transform[1]) )
@@ -371,29 +371,29 @@ class Rules():
         piece_identity = self.gamestate[ self.location[0] ][ self.location[1] ]
         if piece_identity[0] == "p":
             if piece_identity[2] == "P":
-                return PawnOfPawnsRules(self)
+                return Rules.PawnOfPawnsRules(self)
             else:
-                return PawnMoves(self)
+                return Rules.PawnMoves(self)
         else:
             piece_identity = piece_identity[1]
             if piece_identity == "C":
-                return CamelMoves(self)
+                return Rules.CamelMoves(self)
             elif piece_identity == "D":
-                return DabbabaMoves(self)
+                return Rules.DabbabaMoves(self)
             elif piece_identity == "E":
-                return ElephantMoves(self))
+                return Rules.ElephantMoves(self)
             elif piece_identity == "R":
-                return RookMoves(self)
+                return Rules.RookMoves(self)
             elif piece_identity == "N":
-                return HorseMoves(self)
+                return Rules.HorseMoves(self)
             elif piece_identity == "S":
-                return ScoutMoves(self)
+                return Rules.ScoutMoves(self)
             elif piece_identity == "G":
-                return GiraffeMoves(self)
+                return Rules.GiraffeMoves(self)
             elif piece_identity == "V":
-                return VizierMoves(self)
+                return Rules.VizierMoves(self)
             elif piece_identity == "K":
-                return KingMoves(self)
+                return Rules.KingMoves(self)
             else:
-                return MinisterMoves(self)
+                return Rules.MinisterMoves(self)
 
