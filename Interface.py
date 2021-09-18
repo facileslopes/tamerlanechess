@@ -22,14 +22,12 @@ def load_pieces():
     #This function loads the piece images so that they may be displayed
     is_pawn = ["","p"]
     colors = ["w","b"]
-    piece_types = ["C","D","E","G","K","M","N","R","S","V"]
+    piece_types = ["C","D","E","G","K","M","N","P","R","S","V"]
     for a in is_pawn:
         for b in colors:
             for c in piece_types:
                 piece = a+b+c
-                piece_sprites[piece] = pygame.image.load(sprites_loc + "Pieces/" + piece + ".png")
-    piece_sprites["pwP"] = pygame.image.load(sprites_loc + "Pieces/pwP.png")
-    piece_sprites["pbP"] = pygame.image.load(sprites_loc + "Pieces/pbP.png")    
+                piece_sprites[piece] = pygame.image.load(sprites_loc + "Pieces/" + piece + ".png")    
 
 def init_board(white,black):
     #This function will initialise the board
@@ -63,7 +61,18 @@ def display_gamestate(gamestate):
                 piece_center_sq.center = piece_sq.center
                 screen.blit(piece,piece_center_sq )
                 
-
+def highlight_squares(gamestate,valid_moves,squares_selected):
+    #Highlights the selected piece
+    if len(squares_selected) != 0:
+        r,c = squares_selected
+        if gamestate[r][c][0] == ('w' if Engine.is_player_white else 'b'):
+            hl = p.Surface((sq_dim,sq_dim))
+            hl.set_alpha(100)
+            hl.fill(p.Color('blue'))
+            screen.blit(hl , (r*sq_dim,c*sq_dim))
+            hl.fill(p.Color('yellow'))
+            for move in valid_moves:
+                screen.blit(hl, ())
     
 def main():
     pygame.init()
@@ -169,12 +178,11 @@ def main():
                                 if Engine.is_player_white == Engine.who_is_moving (Engine.game_state, move):
                                     #First check if it's the correct turn for the piece to be moved
                                     rule_check = Ruleset.Rules( [clicked_squares[0][0], clicked_squares[0][1] ], Engine.game_state)
-                                    print(rule_check.map_piece_to_rule())
-                                    print((move.end_row , move.end_col))
                                     if (move.end_row , move.end_col) in rule_check.map_piece_to_rule():
                                         #Then check if the move is a valid one
                                         Engine.game_state = Engine.make_move( Engine.game_state, move )
                                         Engine.is_player_white = not(Engine.is_player_white)
+                                Engine.promote_pieces(Engine.game_state)
                                 clicked_squares = []
                             
 if __name__ == "__main__":
