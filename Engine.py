@@ -15,7 +15,9 @@ m_init_state = [
 f_init_state = []#To be implemented
 game_log = []
 is_player_white = True
-
+#Variables to store how many times the white and black Pawn of Pawns have reached the end of the board
+b_pofp_ended = 0
+w_pofp_ended = 0
 class Move():
     def __init__(self, start_sq,end_sq, board):
         self.start_row = start_sq[0]
@@ -26,11 +28,11 @@ class Move():
         self.piece_captured = board[self.end_row][self.end_col]
 
 def make_move(board,move):
+    #Makes a move on the board
     new_board = board
     new_board[move.start_row][move.start_col] = "-"
     new_board[move.end_row][move.end_col] = move.piece_moved
     return new_board
-                      
 
 def who_is_moving(board,move):
     #Returns True if a white piece is being moved, else returns False
@@ -44,3 +46,15 @@ def who_is_moving(board,move):
         return True
     if piece == "b":
         return False
+
+def promote_pieces(board):
+    #Promotes all pieces at the end of the turn
+    for x in [0,9]:
+        for y in range( len(board[x]) ):
+            if board[x][y][0] == "p":
+                if board[x][y][2] == "K":
+                    board[x][y] = board[x][y][1] + "P"
+                elif board[x][y][2] == "P":
+                    pass
+                else:
+                    board[x][y] = board[x][y][1:]
