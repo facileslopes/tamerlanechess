@@ -45,20 +45,33 @@ class Rules():
         return Rules.transform_check(self.location, possible_transforms)
     
     def PawnMoves(self):
-        #Pawns can only move one step at a time, and can only capture pieces to the top-right and top-left of them.
+        #Pawns move like pawns in Chess
         #Once they reach the end of the board, they are promoted to their respective pieces
         possible_transforms = []
         x,y = self.location[0],self.location[1]
-        pawn_type = self.gamestate[x][y]
-        if self.gamestate[x-1][y] == "-":
-            #Check if the space in front of the piece is empty
-            possible_transforms.append( (-1,0) )
-        if x != 0 and y != 0 and self.gamestate[x-1][y-1] != "N/A" and self.gamestate[x-1][y-1] != "-":
-            #Check if the piece can be moved to the top-left
-            possible_transforms.append( (-1,-1) )
-        if x != 0 and y != 12 and self.gamestate[x-1][y-1] != "N/A" and self.gamestate[x-1][y-1] != "-":
-            #Check if the piece can be moved to the top-right
-            possible_transforms.append( (-1,1) )
+        pawn_color = self.gamestate[x][y][1]
+        if pawn_color == "w":
+            #Check if the pawn is white
+            if self.gamestate[x-1][y] == "-":
+                #Check if the space in front of the piece is empty
+                possible_transforms.append( (-1,0) )
+            if x != 0 and y != 0 and self.gamestate[x-1][y-1] != "N/A" and self.gamestate[x-1][y-1] != "-":
+                #Check if the piece can be moved to the top-left
+                possible_transforms.append( (-1,-1) )
+            if x != 0 and y != 12 and self.gamestate[x-1][y+1] != "N/A" and self.gamestate[x-1][y+1] != "-":
+                #Check if the piece can be moved to the top-right
+                possible_transforms.append( (-1,1) )
+        elif pawn_color == "b":
+            #Check if the pawn is black
+            if self.gamestate[x+1][y] == "-":
+                #Check if the space in front of the piece is empty
+                possible_transforms.append( (1,0) )
+            if x != 0 and y != 0 and self.gamestate[x+1][y-1] != "N/A" and self.gamestate[x+1][y-1] != "-":
+                #Check if the piece can be moved to the bottom-left
+                possible_transforms.append( (1,-1) )
+            if x != 0 and y != 12 and self.gamestate[x+1][y+1] != "N/A" and self.gamestate[x+1][y+1] != "-":
+                #Check if the piece can be moved to the bottom-right
+                possible_transforms.append( (1,1) )
         return Rules.transform_check(self.location, possible_transforms)
     
     def RookMoves(self):
@@ -337,7 +350,34 @@ class Rules():
 
     def PrinceMoves(self):
         #A prince acts like a King, but can be captured
-        pass
+        possible_transforms = []
+        x = self.location[0]
+        y = self.location[1]
+        if x != 0 and self.gamestate[x - 1][y ] != "N/A":
+            #Check if the piece can be moved upwards
+            possible_transforms.append( (-1 , 0) )
+        if x != 9 and self.gamestate[x + 1][y ] != "N/A":
+            #Check if the piece can be moved downwards
+            possible_transforms.append( (1 , 0) )
+        if y != 0 and self.gamestate[x][y - 1] != "N/A":
+            #Check if the piece can be moved left
+            possible_transforms.append( (0 , -1) )
+        if y != 12 and self.gamestate[x ][y + 1] != "N/A":
+            #Check if the piece can be moved right
+            possible_transforms.append( (0 , 1) )
+        if x != 0 and y != 0 and self.gamestate[x-1][y-1] != "N/A":
+            #Check if the piece can be moved to the top-left
+            possible_transforms.append( (-1,-1) )
+        if x != 0 and y != 12 and self.gamestate[x-1][y+1] != "N/A":
+            #Check if the piece can be moved to the top-right
+            possible_transforms.append( (-1,1) )
+        if x != 9 and y != 12 and self.gamestate[x+1][y+1] != "N/A":
+            #Check if the piece can be moved to the bottom-right
+            possible_transforms.append( (1,1) )
+        if x != 9 and y != 0 and self.gamestate[x+1][y-1] != "N/A":
+            #Check if the piece can be moved to the bottom-left
+            possible_transforms.append( (1,-1) )    
+        return Rules.transform_check(self.location, possible_transforms)
     
     def KingMoves(self):
         #Moves like a King in chess
@@ -394,6 +434,8 @@ class Rules():
                 return Rules.VizierMoves(self)
             elif piece_identity == "K":
                 return Rules.KingMoves(self)
+            elif piece_identity == "P":
+                return Rules.PrinceMoves(self)
             else:
                 return Rules.MinisterMoves(self)
 
