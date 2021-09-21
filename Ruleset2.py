@@ -1,4 +1,5 @@
 import Engine
+import numpy as np
 rows = 10
 columns = 13
 class Rules():
@@ -41,15 +42,28 @@ class Rules():
         return valid_moves
     def long_piece_pathing(self,directions,n):
         #Finds all valid moves for pieces that can move in multiple directions
-        n = 0
+        n2 = n
+        possible_moves = []
         can_move_in_direction = []
         for direction in directions:
             can_move_in_direction.append(True)
         while True in can_move_in_direction:
             for direction in directions:
-                i
+                if can_move_in_direction[directions.index(direction)]:
+                    #First find the value of the transform
+                    transform = n2 * np.array(direction)    
+                    transform = transform.tolist()
+                    move = Rules.return_valid_moves(self,[transform])
+                    if len(move) != 0:
+                        possible_moves.append(move)
+                        move = list(move[0])
+                        if self.gamestate[move[0]][move[1]] != '-':
+                            can_move_in_direction[directions.index(direction)] = False
+                    else:
+                        can_move_in_direction[directions.index(direction)] = False
+            n2 += 1
             
-            
+        return possible_moves
     def return_valid_moves(self,transforms):
         #Both retrieves all valid moves and checks if they are valid
         return Rules.piece_capturing (self, Rules.check_bounds(self, Rules.transform_piece(self, transforms) ) )
@@ -82,6 +96,105 @@ class Rules():
                 
     def RookMoves(self):
         #Rooks move just like rooks in Chess, they can move to any square on the same rank or file as them
+        return Rules.long_piece_pathing(self,[(0,1),(0,-1),(1,0),(-1,0)], 1)
+
+    def ScoutMoves(self):
+        #Scouts move like bishops in regular Chess but it always skips the first square
+        return Rules.long_piece_pathing(self,[(1,1),(1,-1),(-1,1),(-1,-1)], 2)
+
+    def ElephantMoves(self):
+        #Elephant can jump 2 spaces diagonally
+        return Rules.return_valid_moves( self, [[2,2], [2,-2] ,[-2,2], [-2,-2]] )
+
+    def DabbabaMoves(self):
+        #Dabbaba can jump 2 spaces orthogonally
+        return Rules.return_valid_moves( self, [[0,2], [2,0] ,[-2,0], [0,-2]] )
+
+    def HorseMoves(self):
+        #Horses moves like the Knights in chess, moves in an L shape
+        return Rules.return_valid_moves( self, [[2,1],[2,-1],[-2,-1],[-2,1],[1,2],[1,-2],[-1,2],[-1,-2]])
+
+    def CamelMoves(self):
+        #Camels move like horses, but one step further in all orthogonal directions
+        return Rules.return_valid_moves( self, [[3,1],[3,-1],[-3,-1],[-3,1],[1,3],[1,-3],[-1,3],[-1,-3]])
+
+    def GiraffeMoves(self):
+        #Giraffes first move one step diagonally, then three or more spaces orthagonally
+        print(self.location)
+        diag_transforms = [[1,1], [1,-1] ,[-1,1], [-1,-1]]
+        can_move_in_direction = []
+        diag_moves = Rules.return_valid_moves( self, diag_transforms )
+        diag_transforms = []
+        n = 1
+        valid_moves = []
+        for move in diag_moves:
+            can_move_in_direction.append([True,True])
+            diag_transforms.append( [move[0] - self.location[0], move[1] - self.location[0] ] )
+        while True in can_move_in_direction:
+            for move in diag_moves:
+                for x in range(0,2):
+                    if x == 0:
+                        curr_move = [move[0] + diag_transforms[diag_moves.index(move)][x]*n, move[1] ]
+                    else:
+                        curr_move = [move[0], move[1]  + diag_transforms[diag_moves.index(move)][x]*n ]
+                    if can_move_in_direction[diag_moves.index(move)][x] == True:
+                        curr_move = Rules.piece_capturing (self, Rules.check_bounds(self, curr_move))
+                        if len(curr_move) != 0 and n >= 3:
+                            valid_moves.append(curr_move)
+                            move = list(curr_move[0])
+                            if self.gamestate[move[0]][move[1]] != '-':
+                                can_move_in_direction[diag_moves.index(move)][x] = False
+                        else:
+                            can_move_in_direction[diag_moves.index(move)][x] = False
+            n += 1
+        return valid_moves
+
+    def PrinceMoves(self):
+        #Prince moves like a king but can be captured
+        return Rules.return_valid_moves( self, [[0,1], [1,0] ,[-1,0], [0,-1],[1,1], [1,-1] ,[-1,1], [-1,-1]] )
+
+    def PawnOfPawnsRules(self):
+        #The pawn of pawns acts as a regular pawn until it moves to the final square, where it remains until a situation develops
+        #where it guarantee a capture on any piece on the board, then it may be moved there.
+        #When it reaches the end of the board a second time, it is moved to the square it started from
+        #The third time it reaches the end of the board, it becomes a prince
         
-a = Rules([2,3],Engine.m_init_state)
-print(a.VizierMoves()  )           
+        return []
+
+    def KingMoves(self):
+        #Moves like a King in chess
+        return []
+    
+    def map_piece_to_rule(self):
+        #Checks the piece to see what rule applies to it
+        piece_identity = self.gamestate[ self.location[0] ][ self.location[1] ]
+        if piece_identity[0] == "p":
+            if piece_identity[2] == "P":
+                return Rules.PawnOfPawnsRules(self)
+            else:
+                return Rules.PawnMoves(self)
+        else:
+            piece_identity = piece_identity[1]
+            if piece_identity == "C":
+                return Rules.CamelMoves(self)
+            elif piece_identity == "D":
+                return Rules.DabbabaMoves(self)
+            elif piece_identity == "E":
+                return Rules.ElephantMoves(self)
+            elif piece_identity == "R":
+                return Rules.RookMoves(self)
+            elif piece_identity == "N":
+                return Rules.HorseMoves(self)
+            elif piece_identity == "S":
+                return Rules.ScoutMoves(self)
+            elif piece_identity == "G":
+                return Rules.GiraffeMoves(self)
+            elif piece_identity == "V":
+                return Rules.VizierMoves(self)
+            elif piece_identity == "K":
+                return Rules.KingMoves(self)
+            elif piece_identity == "P":
+                return Rules.PrinceMoves(self)
+            else:
+                return Rules.MinisterMoves(self)
+         
