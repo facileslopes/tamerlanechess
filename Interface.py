@@ -2,6 +2,7 @@
 import pygame
 import Engine
 import Ruleset
+import GameAI
 import time
 import sys
 #Initialising some variables and stuff here
@@ -64,15 +65,14 @@ def display_gamestate(gamestate):
 def highlight_squares(gamestate,valid_moves,squares_selected):
     #Highlights the selected piece
     if len(squares_selected) != 0:
-        r,c = squares_selected
-        if gamestate[r][c][0] == ('w' if Engine.is_player_white else 'b'):
-            hl = p.Surface((sq_dim,sq_dim))
-            hl.set_alpha(100)
-            hl.fill(p.Color('blue'))
-            screen.blit(hl , (r*sq_dim,c*sq_dim))
-            hl.fill(p.Color('yellow'))
-            for move in valid_moves:
-                screen.blit(hl, ())
+        c,r = squares_selected[0]
+        hl = pygame.Surface((sq_dim,sq_dim))
+        hl.set_alpha(100)
+        hl.fill(pygame.Color('blue'))
+        screen.blit(hl , (r*sq_dim,c*sq_dim))
+        hl.fill(pygame.Color('yellow'))
+        for move in valid_moves:
+            screen.blit(hl, (move[1]*sq_dim, move[0]*sq_dim))
     
 def main():
     pygame.init()
@@ -156,9 +156,11 @@ def main():
             load_pieces()
             sq_selected = False
             clicked_squares = []
+            available_moves = []
             while True:
                 init_board(light_col,dark_col)
                 display_gamestate(Engine.game_state)
+                highlight_squares(Engine.game_state,available_moves,clicked_squares)
                 pygame.display.flip()
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:#For quitting the game
@@ -169,21 +171,29 @@ def main():
                         if not(sq_selected):#If a piece hasn't already been selected, check if a piece is currently being clicked
                             if Engine.game_state[sq_loc[0] ][sq_loc[1] ] != "-" and Engine.game_state[sq_loc[0] ][sq_loc[1] ] != "N/A":
                                 clicked_squares.append(sq_loc)
-                                sq_selected = True
+                                if Engine.is_player_white == Engine.who_is_moving(Engine.game_state,clicked_squares[0]):
+                                    #If a piece of the correct color is selected
+                                    sq_selected = True
+                                    rule_check = Ruleset.Rules( [clicked_squares[0][0], clicked_squares[0][1] ], Engine.game_state)
+                                    available_moves = rule_check.map_piece_to_rule()
+                                else:
+                                    clicked_squares = []
                         else:#If piece has been selected, move it to the location
                             if Engine.game_state[sq_loc[0] ][sq_loc[1] ] != "N/A":
                                 clicked_squares.append(sq_loc)
                                 sq_selected = False
                                 move = Engine.Move( clicked_squares[0], clicked_squares[1], Engine.game_state )
-                                if Engine.is_player_white == Engine.who_is_moving (Engine.game_state, move):
+                                if Engine.is_player_white == Engine.who_is_moving (Engine.game_state, clicked_squares[0]):
                                     #First check if it's the correct turn for the piece to be moved
                                     rule_check = Ruleset.Rules( [clicked_squares[0][0], clicked_squares[0][1] ], Engine.game_state)
-                                    if (move.end_row , move.end_col) in rule_check.map_piece_to_rule():
+                                    if (move.end_row , move.end_col) in available_moves:
                                         #Then check if the move is a valid one
                                         Engine.game_state = Engine.make_move( Engine.game_state, move )
                                         Engine.is_player_white = not(Engine.is_player_white)
                                 Engine.promote_pieces(Engine.game_state)
                                 clicked_squares = []
-                            
+
 if __name__ == "__main__":
     main()
+else:
+    print("This module is being imported")
