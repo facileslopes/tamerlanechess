@@ -1,9 +1,8 @@
 import Engine
 import numpy as np
+import copy
 rows = 10
 columns = 13
-x = 2
-
 class Rules():
     def __init__(self,location,gamestate):
         self.location = location
@@ -20,11 +19,16 @@ class Rules():
         #Checks if the piece or where it's moving to is outside the board
         valid_moves = []
         for move in moves:
-            if move[0] > 0 and move[0] < rows and move[1] > 0 and move[1] < columns:
+            if move[0] >= 0 and move[0] < rows and move[1] >= 0 and move[1] < columns:
                 #If the move is within the 10 rows and 13 columns
                 if self.gamestate[move[0]][move[1]] != "N/A":
                     #If the move isn't to an absent tile
                     valid_moves.append(move)
+        if self.gamestate[ self.location[0] ][ self.location[1] ][1] != "K":
+            if (1,0) in valid_moves:
+                valid_moves.remove( (1,0) )
+            elif (8,12) in valid_moves:
+                valid_moves.remove( (8,12) )
         return valid_moves
 
     def find_piece_color(self,location):
@@ -85,7 +89,7 @@ class Rules():
             valid_moves = Rules.transform_piece( self,[[-1,0] , [-1,-1] , [-1,1]] )
         else:
             valid_moves = Rules.transform_piece( self, [[1,0] , [1,1] , [1,-1]] )
-        valid_moves = Rules.check_bounds(self,valid_moves) 
+        valid_moves = Rules.check_bounds(self,valid_moves)
         valid_moves2 = tuple(valid_moves)
         for move in valid_moves2:
             #Check if each move is valid
@@ -136,8 +140,6 @@ class Rules():
         can_move = False
         #First check where it can move from after moving one step diagonally
         for move in diag_moves:
-            print(move)
-            print(self.location)
             can_move_in_direction.append([True,True])
             diag_transforms.append( [move[0] - self.location[0], move[1] - self.location[1] ] )
         for direction in can_move_in_direction:
@@ -178,6 +180,8 @@ class Rules():
         #where it guarantee a capture on any piece on the board, then it may be moved there.
         #When it reaches the end of the board a second time, it is moved to the square it started from
         #The third time it reaches the end of the board, it becomes a prince
+
+        #First move it like a regular pawn
         end_row = 0 if Rules.find_piece_color(self,self.location) == "w" else 9
         if self.location[0] != end_row:
             if Rules.find_piece_color(self,location=self.location) == "w":
@@ -193,8 +197,55 @@ class Rules():
                         valid_moves.remove(move)
                 elif self.gamestate[ move[0] ][ move[1] ] == "-":
                     valid_moves.remove(move)
-        return Rules.piece_capturing(self,valid_moves)    
+            return Rules.piece_capturing(self,valid_moves)
+        #If the piece is at the end already, assume it has only reached the end the first time
+        #and see if the piece can be moved to a place where it can guarantee a capture
+        else:
+            #First get a list of pieces on the board that cannot move
+            immobile_pieces = Rules.immobile_pieces(self)
+            valid_moves = []
+            valid_moves2 = []
+            #Then find the pawn's color and where it can move to capture a piece
+            if Rules.find_piece_color(self,self.location) == "w":
+                capture_dir = ([-1,-1],[-1,1])
+            else:
+                capture_dir = [[1,-1],[1,1]]
+            for piece in immobile_pieces:
+                for item in capture_dir:
+                    #Check whether each piece can be captured by creating a copy of the board and playing out the pawn's moves on that
+                    gs = copy.deepcopy(self.gamestate)
+                    if len(Rules.check_bounds(self, [[piece[0] - item[0],piece[1] - item[0] ]])) != 0:
+                        if gs[piece[0] - item[0] ][piece[1] - item[1] ] not in ["-","N/A","bK","wK"]:
+                            #If the pawn isn't being moved out of the board, simulate moving it there
+                            gs[piece[0] - item[0] ][piece[1] - item[1] ] = self.gamestate[self.location[0]][self.location[1]]
+                            ChessPiece = Rules([piece[0] , piece[1]], gs)
+                            if len(ChessPiece.map_piece_to_rule()) == 0:
+                                valid_moves.append([piece[0] - item[0] , piece[1] - item[1] ])
 
+            #Find all the squares from where the black pawn can attack two pieces
+            for x in range(1,9):
+                for y in range(2,11):
+                    if 
+                                
+            for move in valid_moves:
+                if move not in valid_moves2:
+                    valid_moves2.append(move)
+            return valid_moves
+            
+    def immobile_pieces(self):
+        #Find a list of pieces that cannot be moved
+        color = Rules.find_piece_color(self,self.location)
+        immobiles = []
+        for x in range(rows):
+            for y in range(columns):
+                if self.gamestate[x][y] not in ["pwP","pbP","-","N/A"]:
+                    if self.gamestate[x][y][1] != "K" and Rules.find_piece_color(self,[x,y]) != color: 
+                        piece = Rules([x,y], self.gamestate)
+                        moves = piece.map_piece_to_rule()
+                        if len(moves) == 0:
+                            immobiles.append([x,y])
+        return immobiles
+        
     def KingMoves(self):
         #Moves like a King in chess
         return []
