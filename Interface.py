@@ -186,11 +186,11 @@ def main():
                                 if Engine.is_player_white == Engine.who_is_moving (Engine.game_state, clicked_squares[0]):
                                     #First check if it's the correct turn for the piece to be moved
                                     rule_check = Ruleset.Rules( [clicked_squares[0][0], clicked_squares[0][1] ], Engine.game_state)
-                                    if (move.end_row , move.end_col) in available_moves:
+                                    if (move.end_row , move.end_col) in available_moves or [move.end_row , move.end_col] in available_moves:
                                         #Then check if the move is a valid one
                                         Engine.game_state = Engine.make_move( Engine.game_state, move )
                                         Engine.is_player_white = not(Engine.is_player_white)
-                                Engine.promote_pieces(Engine.game_state)
+                                Engine.pofp_ended = Engine.promote_pieces(Engine.game_state, Engine.pofp_ended)
                                 clicked_squares = []
 
 if __name__ == "__main__":
