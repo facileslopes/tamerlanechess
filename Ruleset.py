@@ -1,5 +1,6 @@
 import Engine
 import numpy as np
+import time #For debugging purposes
 import copy
 rows = 10
 columns = 13
@@ -222,10 +223,25 @@ class Rules():
                             if len(ChessPiece.map_piece_to_rule()) == 0:
                                 valid_moves.append([piece[0] - item[0] , piece[1] - item[1] ])
 
-            #Find all the squares from where the black pawn can attack two pieces
-            for x in range(1,9):
-                for y in range(2,11):
-                    if 
+            #Find all the squares from where the pawn can attack two pieces
+            for x in range(rows):
+                for y in range(columns):
+                    #Check if that space is occupied by a king or not part of the board
+                    if self.gamestate[x][y] not in ["N/A","bK","wK"]:
+                        gs = copy.deepcopy(self.gamestate)
+                        gs[x][y] = self.gamestate[self.location[0]][self.location[1]]
+                        NewPawnLoc = Rules([x,y],gs)
+                        potential_moves = NewPawnLoc.PawnMoves()
+                        if len(potential_moves) >= 2:
+                            #If the number of moves the pawn can make is above 2, find whether the number of pieces it can capture is 2
+                            potential_move_copy = copy.deepcopy(potential_moves)
+                            for move in potential_moves:
+                                if gs[move[0]][move[1]] == "-":
+                                    potential_move_copy.remove(move)
+                            if len(potential_move_copy) == 2:
+                                valid_moves.append([x,y])
+                                
+                            
                                 
             for move in valid_moves:
                 if move not in valid_moves2:
@@ -245,10 +261,70 @@ class Rules():
                         if len(moves) == 0:
                             immobiles.append([x,y])
         return immobiles
+
+    def update_threat_table(gs,table):
+        #Updates the set of squares on the board that are threatened
+        empty_table = [[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]]
+        for x in range(rows):
+            for y in range(columns):
+                color = ""
+                moves = []
+                if gs[x][y] not in ["N/A","-"]:
+                   if gs[x][y][0] != "p":
+                       Piece = Rules([x,y],gs)
+                       moves = Piece.map_piece_to_rule()
+                       color = Rules.find_piece_color(Piece,[x,y])
+                       
+                   elif gs[x][y] == "pwP":
+                       if x != 0:
+                           Piece = Rules([x,y],gs)
+                           color = Rules.find_piece_color(Piece,[x,y])
+                           if color == "w":
+                               moves = [[x-1,y-1],[x-1,y+1]]
+                           else:
+                               moves = [[x+1,y-1],[x+1,y+1]]
+                   elif gs[x][y] == "pbP":
+                       if x != 12:
+                           Piece = Rules([x,y],gs)
+                           color = Rules.find_piece_color(Piece,[x,y])
+                           if color == "w":
+                               moves = [[x-1,y-1],[x-1,y+1]]
+                           else:
+                               moves = [[x+1,y-1],[x+1,y+1]]
+                   else: 
+                       Piece = Rules([x,y],gs)
+                       color = Rules.find_piece_color(Piece,[x,y])
+                       if color == "w":
+                           moves = [[x-1,y-1],[x-1,y+1]]
+                       else:
+                           moves = [[x+1,y-1],[x+1,y+1]]
+                   n = 0 if color == "w" else 1
+                   if len(moves) != 0:
+                       for move in moves:
+                           empty_table[move[0]][move[1]][n] += 1
+        print(empty_table)
+        return empty_table    
         
     def KingMoves(self):
         #Moves like a King in chess
-        return []
+        valid_moves = Rules.return_valid_moves( self, [[0,1], [1,0] ,[-1,0], [0,-1],[1,1], [1,-1] ,[-1,1], [-1,-1]] )
+        valid_moves_copy = copy.deepcopy(valid_moves)
+        color = Rules.find_piece_color(self,self.location)
+        n = 1 if color == "w" else 0
+        for move in valid_moves_copy:
+            if Engine.threat_table[move[0]][move[1]][n] != 0:
+                valid_moves.remove(move)
+        return valid_moves
+                
     
     def map_piece_to_rule(self):
         #Checks the piece to see what rule applies to it
@@ -283,4 +359,7 @@ class Rules():
             else:
                 return Rules.MinisterMoves(self)
          
+
+
+
 
