@@ -71,8 +71,9 @@ def highlight_squares(gamestate,valid_moves,squares_selected):
         hl.fill(pygame.Color('blue'))
         screen.blit(hl , (r*sq_dim,c*sq_dim))
         hl.fill(pygame.Color('yellow'))
-        for move in valid_moves:
-            screen.blit(hl, (move[1]*sq_dim, move[0]*sq_dim))
+        if len(valid_moves) != 0:
+            for move in valid_moves:
+                screen.blit(hl, (move[1]*sq_dim, move[0]*sq_dim))
     
 def main():
     pygame.init()
@@ -157,11 +158,13 @@ def main():
             sq_selected = False
             clicked_squares = []
             available_moves = []
+            Engine.threat_table = Ruleset.Rules.update_threat_table(Engine.game_state, Engine.threat_table)
             while True:
                 init_board(light_col,dark_col)
                 display_gamestate(Engine.game_state)
                 highlight_squares(Engine.game_state,available_moves,clicked_squares)
                 pygame.display.flip()
+                
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:#For quitting the game
                         sys.exit()
@@ -192,7 +195,7 @@ def main():
                                         Engine.is_player_white = not(Engine.is_player_white)
                                 Engine.pofp_ended = Engine.promote_pieces(Engine.game_state, Engine.pofp_ended)
                                 clicked_squares = []
-
+                                Engine.threat_table = Ruleset.Rules.update_threat_table(Engine.game_state, Engine.threat_table)
 if __name__ == "__main__":
     main()
 else:
