@@ -158,13 +158,12 @@ def main():
             sq_selected = False
             clicked_squares = []
             available_moves = []
-            Engine.threat_table = Ruleset.Rules.update_threat_table(Engine.game_state, Engine.threat_table)
+            Engine.ZonesOfControls = Ruleset.Rules.update_zocs(Engine.game_state)
             while True:
                 init_board(light_col,dark_col)
                 display_gamestate(Engine.game_state)
                 highlight_squares(Engine.game_state,available_moves,clicked_squares)
                 pygame.display.flip()
-                
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:#For quitting the game
                         sys.exit()
@@ -175,10 +174,21 @@ def main():
                             if Engine.game_state[sq_loc[0] ][sq_loc[1] ] != "-" and Engine.game_state[sq_loc[0] ][sq_loc[1] ] != "N/A":
                                 clicked_squares.append(sq_loc)
                                 if Engine.is_player_white == Engine.who_is_moving(Engine.game_state,clicked_squares[0]):
-                                    #If a piece of the correct color is selected
-                                    sq_selected = True
-                                    rule_check = Ruleset.Rules( [clicked_squares[0][0], clicked_squares[0][1] ], Engine.game_state)
-                                    available_moves = rule_check.map_piece_to_rule()
+                                    #Check if a pawn of pawn that has reached the end of the board can be moved
+                                    if Ruleset.Rules.check_if_pofp_canmove(Engine.game_state,Engine.is_player_white):
+                                        if Engine.game_state[sq_loc[0] ][sq_loc[1] ] in ["pbB","pwP"]:
+                                            sq_selected = True
+                                            rule_check = Ruleset.Rules( [clicked_squares[0][0], clicked_squares[0][1] ], Engine.game_state)
+                                            available_moves = rule_check.map_piece_to_rule()
+                                            available_moves = rule_check.check_king_vulnerable(available_moves)
+                                        else:
+                                            clicked_squares = []
+                                    else:
+                                        #If a piece of the correct color is selected
+                                        sq_selected = True
+                                        rule_check = Ruleset.Rules( [clicked_squares[0][0], clicked_squares[0][1] ], Engine.game_state)
+                                        available_moves = rule_check.map_piece_to_rule()
+                                        available_moves = rule_check.check_king_vulnerable(available_moves)
                                 else:
                                     clicked_squares = []
                         else:#If piece has been selected, move it to the location
@@ -195,7 +205,8 @@ def main():
                                         Engine.is_player_white = not(Engine.is_player_white)
                                 Engine.pofp_ended = Engine.promote_pieces(Engine.game_state, Engine.pofp_ended)
                                 clicked_squares = []
-                                Engine.threat_table = Ruleset.Rules.update_threat_table(Engine.game_state, Engine.threat_table)
+                                Engine.ZonesOfControls = Ruleset.Rules.update_zocs(Engine.game_state)
+
 if __name__ == "__main__":
     main()
 else:
