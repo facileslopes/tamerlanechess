@@ -1,6 +1,6 @@
 import Engine
 import numpy as np
-import time #For debugging purposes
+import time
 import copy
 rows = 10
 columns = 13
@@ -17,7 +17,7 @@ class Rules():
         return possible_moves
         
     def check_bounds(self,moves):
-        #Checks if the piece or where it's moving to is outside the board
+        #Makes sure the piece isn't moving anywhere it can't
         valid_moves = []
         for move in moves:
             if move[0] >= 0 and move[0] < rows and move[1] >= 0 and move[1] < columns:
@@ -29,7 +29,7 @@ class Rules():
             if (1,0) in valid_moves:
                 valid_moves.remove( (1,0) )
             elif (8,12) in valid_moves:
-                valid_moves.remove( (8,12) )
+                valid_moves.remove( (8,12) )     
         return valid_moves
 
     def find_piece_color(self,location):
@@ -77,12 +77,14 @@ class Rules():
 
     def VizierMoves(self):
         #Vizier can only move 1 space orthogonally(up,down,left,right)
-        return Rules.return_valid_moves( self, [[0,1], [1,0] ,[-1,0], [0,-1]] )
-
+        valid_moves = Rules.return_valid_moves( self, [[0,1], [1,0] ,[-1,0], [0,-1]] )
+        return valid_moves
+    
     def MinisterMoves(self):
         #Minister can move one space diagonally
-        return Rules.return_valid_moves( self, [[1,1], [1,-1] ,[-1,1], [-1,-1]] )
-
+        valid_moves = Rules.return_valid_moves( self, [[1,1], [1,-1] ,[-1,1], [-1,-1]] )
+        return valid_moves
+        
     def PawnMoves(self):
         #Pawns move like pawns in Chess
         #Once they reach the end of the board, they are promoted to their respective pieces
@@ -261,71 +263,64 @@ class Rules():
                         if len(moves) == 0:
                             immobiles.append([x,y])
         return immobiles
-
-    def update_threat_table(gs,table):
-        #Updates the set of squares on the board that are threatened
-        empty_table = [[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]]
-        for x in range(rows):
-            for y in range(columns):
-                color = ""
-                moves = []
-                if gs[x][y] not in ["N/A","-"]:
-                   if gs[x][y][0] != "p":
-                       Piece = Rules([x,y],gs)
-                       moves = Piece.map_piece_to_rule()
-                       color = Rules.find_piece_color(Piece,[x,y])
-                       
-                   elif gs[x][y] == "pwP":
-                       if x != 0:
-                           Piece = Rules([x,y],gs)
-                           color = Rules.find_piece_color(Piece,[x,y])
-                           if color == "w":
-                               moves = [[x-1,y-1],[x-1,y+1]]
-                           else:
-                               moves = [[x+1,y-1],[x+1,y+1]]
-                   elif gs[x][y] == "pbP":
-                       if x != 12:
-                           Piece = Rules([x,y],gs)
-                           color = Rules.find_piece_color(Piece,[x,y])
-                           if color == "w":
-                               moves = [[x-1,y-1],[x-1,y+1]]
-                           else:
-                               moves = [[x+1,y-1],[x+1,y+1]]
-                   else: 
-                       Piece = Rules([x,y],gs)
-                       color = Rules.find_piece_color(Piece,[x,y])
-                       if color == "w":
-                           moves = [[x-1,y-1],[x-1,y+1]]
-                       else:
-                           moves = [[x+1,y-1],[x+1,y+1]]
-                   n = 0 if color == "w" else 1
-                   if len(moves) != 0:
-                       for move in moves:
-                           empty_table[move[0]][move[1]][n] += 1
-        print(empty_table)
-        return empty_table    
+    
         
     def KingMoves(self):
         #Moves like a King in chess
         valid_moves = Rules.return_valid_moves( self, [[0,1], [1,0] ,[-1,0], [0,-1],[1,1], [1,-1] ,[-1,1], [-1,-1]] )
         valid_moves_copy = copy.deepcopy(valid_moves)
         color = Rules.find_piece_color(self,self.location)
-        n = 1 if color == "w" else 0
+        enemy_color = "b" if color == "w" else "w"
         for move in valid_moves_copy:
-            if Engine.threat_table[move[0]][move[1]][n] != 0:
+            if move in Engine.ZonesOfControls[enemy_color]:
                 valid_moves.remove(move)
         return valid_moves
-                
     
+    def check_if_pofp_canmove(board,player):
+    #Check if the pawn of pawns is at the end of the board and if it can capture a piece
+        piece_location = []
+        if player:
+            if "pwP" in board[0]:
+                piece_location = board[0].index("pwP")
+                PawnOfPawns = Rules([0,piece_location],board)
+                if len(PawnOfPawns.PawnOfPawnsRules()) != 0:
+                    return True
+        else:
+            if "pbP" in board[0]:
+                piece_location = board[9].index("pbP")
+                PawnOfPawns = Rules([9,piece_location],board)
+                if len(PawnOfPawns.PawnOfPawnsRules()) != 0:
+                    return True    
+        return False              
+                    
+    def is_king_threatened(self,move):
+        #Check if the player's king is being threatened currently
+        piece = self.gamestate[self.location[0]][self.location[1]]
+        gs = copy.deepcopy(self.gamestate)
+        gs[self.location[0]][self.location[1]] = "-"
+        gs[move[0]][move[1]] = piece
+        color = Rules.find_piece_color(self,location=self.location)
+        for x in range(rows):
+            if color + "K" in gs[x]:
+                xloc = x
+                yloc = gs[x].index(color + "K")
+        for x in range(rows):
+            for y in range(columns):
+                if gs[x][y] not in ["-","N/A"]:
+                    rule_check = Rules([x,y],gs)
+                    available_moves = rule_check.map_piece_to_rule()
+                    if (xloc,yloc) in available_moves:
+                        return True
+                    
+
+    def check_king_vulnerable(self,moves):
+        #Checks which moves make the king vulnerable
+        moves_copy = copy.deepcopy(moves)
+        for move in moves:
+            if Rules.is_king_threatened(self,move):
+                moves_copy.remove(move)
+        return moves_copy
+                
     def map_piece_to_rule(self):
         #Checks the piece to see what rule applies to it
         piece_identity = self.gamestate[ self.location[0] ][ self.location[1] ]
@@ -359,7 +354,184 @@ class Rules():
             else:
                 return Rules.MinisterMoves(self)
          
+    def return_zoc(self,transforms):
+        #Finds the zone of control(the squares which a piece is attacking)
+        return Rules.check_bounds(self, Rules.transform_piece(self, transforms) ) 
 
+    def PawnZOC(self):
+        #Finds the ZOC of a pawn
+        if Rules.find_piece_color(self,location=self.location) == "w":
+            return Rules.return_zoc(self,[[-1,-1],[-1,1]])
+        else:
+            return Rules.return_zoc(self,[[1,-1],[1,1]])
 
+    def MinisterZOC(self):
+        #Finds the ZOC of a minister
+        return Rules.return_zoc( self, [[1,1], [1,-1] ,[-1,1], [-1,-1]] )
+    
+    def VizierZOC(self):
+        #Finds the ZOC of a vizier
+        return Rules.return_zoc( self, [[1,0], [0,-1] ,[-1,0], [0,1]] )
 
+    def CamelZOC(self):
+        return Rules.return_zoc( self, [[3,1],[3,-1],[-3,-1],[-3,1],[1,3],[1,-3],[-1,3],[-1,-3]])
 
+    def ElephantZOC(self):
+        return Rules.return_zoc( self, [[2,2], [2,-2] ,[-2,2], [-2,-2]] )
+
+    def DabbabaZOC(self):
+        return Rules.return_zoc( self, [[0,2], [2,0] ,[-2,0], [0,-2]] )
+
+    def HorseZOC(self):
+        return Rules.return_zoc( self, [[2,1],[2,-1],[-2,-1],[-2,1],[1,2],[1,-2],[-1,2],[-1,-2]])
+
+    def KingZOC(self):
+        return Rules.return_zoc(self, [[1,0], [0,-1] ,[-1,0], [0,1],[1,1], [1,-1] ,[-1,1], [-1,-1]] )
+
+    def RookZOC(self):
+        n = 1
+        possible_moves = []
+        directions = [[0,1], [1,0] ,[-1,0], [0,-1]]
+        can_move_in_direction = []
+        color = Rules.find_piece_color(self,location=self.location)
+        enemy_king = "bK" if color == "w" else "wK"
+        for direction in directions:
+            can_move_in_direction.append(True)
+        while True in can_move_in_direction:
+            for direction in directions:
+                if can_move_in_direction[directions.index(direction)]:
+                    #First find the value of the transform
+                    transform = n * np.array(direction)    
+                    transform = transform.tolist()
+                    move = Rules.return_zoc(self,[transform])
+                    if len(move) != 0:
+                        possible_moves.append(move[0])
+                        move = list(move[0])
+                        if self.gamestate[move[0]][move[1]] != '-' and self.gamestate[move[0]][move[1]] != enemy_king:
+                            can_move_in_direction[directions.index(direction)] = False
+                    else:
+                        can_move_in_direction[directions.index(direction)] = False
+            n += 1
+        return possible_moves
+
+    def ScoutZOC(self):
+        n = 1
+        possible_moves = []
+        directions = [[1,1], [1,-1] ,[-1,1], [-1 ,-1]]
+        can_move_in_direction = []
+        color = Rules.find_piece_color(self,location=self.location)
+        enemy_king = "bK" if color == "w" else "wK"
+        for direction in directions:
+            can_move_in_direction.append(True)
+        while True in can_move_in_direction:
+            for direction in directions:
+                if can_move_in_direction[directions.index(direction)]:
+                    #First find the value of the transform
+                    transform = n * np.array(direction)    
+                    transform = transform.tolist()
+                    move = Rules.return_zoc(self,[transform])
+                    if len(move) != 0:
+                        possible_moves.append(move[0])
+                        move = list(move[0])
+                        if self.gamestate[move[0]][move[1]] != '-' and self.gamestate[move[0]][move[1]] != enemy_king:
+                            can_move_in_direction[directions.index(direction)] = False
+                    else:
+                        can_move_in_direction[directions.index(direction)] = False
+            n += 1
+        exclude_moves = tuple(Rules.transform_piece( self, [[1,1], [1,-1] ,[-1,1], [-1,-1]] ))
+        if len(possible_moves) != 0:
+            for move in exclude_moves:
+                if move in possible_moves:
+                    possible_moves.remove(move)
+        return possible_moves
+
+    def GiraffeZOC(self):
+        diag_transforms = [[1,1], [1,-1] ,[-1,1], [-1,-1]]
+        can_move_in_direction = []
+        diag_moves = Rules.return_valid_moves( self, diag_transforms )
+        diag_transforms = []
+        n = 1
+        valid_moves = []
+        can_move = False
+        color = Rules.find_piece_color(self,location=self.location)
+        enemy_king = "bK" if color == "w" else "wK"
+        #First check where it can move from after moving one step diagonally
+        for move in diag_moves:
+            can_move_in_direction.append([True,True])
+            diag_transforms.append( [move[0] - self.location[0], move[1] - self.location[1] ] )
+        for direction in can_move_in_direction:
+            for x in direction:
+                if x:
+                    can_move = True
+        while can_move:
+            for move in diag_moves:
+                for x in range(0,2):
+                    if x == 0:
+                        curr_move = [move[0] + diag_transforms[diag_moves.index(move)][x]*n, move[1] ]
+                    else:
+                        curr_move = [move[0], move[1]  + diag_transforms[diag_moves.index(move)][x]*n ]
+                    if can_move_in_direction[diag_moves.index(move)][x] == True:
+                        curr_move = Rules.check_bounds(self, [curr_move])
+                        if len(curr_move) != 0:
+                            if n >= 3:
+                                valid_moves.append(tuple(curr_move[0]))
+                            lmove = list(curr_move[0])
+                            if self.gamestate[lmove[0]][lmove[1]] != '-' and self.gamestate[move[0]][move[1]] != enemy_king:
+                                can_move_in_direction[diag_moves.index(move)][x] = False
+                        else:
+                            can_move_in_direction[diag_moves.index(move)][x] = False
+            can_move = False
+            for direction in can_move_in_direction:
+                for x in direction:
+                    if x:
+                        can_move = True
+            n += 1
+        return valid_moves
+
+        
+    def map_piece_to_zone_of_control(self):
+        #Checks the piece to see what zone of control it has
+        piece_identity = self.gamestate[ self.location[0] ][ self.location[1] ]
+        if piece_identity[0] == "p":
+            return Rules.PawnZOC(self)
+        else:
+            piece_identity = piece_identity[1]
+            if piece_identity == "C":
+                return Rules.CamelZOC(self)
+            elif piece_identity == "D":
+                return Rules.DabbabaZOC(self)
+            elif piece_identity == "E":
+                return Rules.ElephantZOC(self)
+            elif piece_identity == "R":
+                return Rules.RookZOC(self)
+            elif piece_identity == "N":
+                return Rules.HorseZOC(self)
+            elif piece_identity == "S":
+                return Rules.ScoutZOC(self)
+            elif piece_identity == "G":
+                return Rules.GiraffeZOC(self)
+            elif piece_identity == "V":
+                return Rules.VizierZOC(self)
+            elif piece_identity == "K":
+                return Rules.KingZOC(self)
+            elif piece_identity == "P":
+                return Rules.KingZOC(self)
+            else:
+                return Rules.MinisterZOC(self)
+
+    def update_zocs(gs):
+        #Returns the squares each player threaten
+        zoneofcontrols = {"w":[],"b":[]}
+        for x in range(rows):
+            for y in range(columns):
+                color = ""
+                zoc = []
+                if gs[x][y] not in ["N/A","-"]:
+                    Piece = Rules([x,y],gs)
+                    zoc = Piece.map_piece_to_zone_of_control()
+                    color = Rules.find_piece_color(Piece,[x,y])
+                if len(zoc) != 0:
+                    for move in zoc:
+                        if move not in zoneofcontrols[color]:
+                            zoneofcontrols[color].append(move)
+        return zoneofcontrols
