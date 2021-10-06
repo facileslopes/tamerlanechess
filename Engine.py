@@ -22,20 +22,14 @@ f_init_state = [
     ["N/A","pwR", "pwN", "pwS", "pwG", "pwV", "-", "pwM", "pwE", "pwC", "pwD" ,"pwP","N/A"],
     ["N/A","wR", "wN", "wS", "wG","wD", "pwK", "wD" , "wG", "wS", "wN", "wR",'-'],
     ["N/A","wE", "-" , "wC", "-", "wV", "wK", "wM", "-", "wC" ,"-" ,"wE","N/A"]
-    ]#To be implemented
-threat_table = [[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]]#Stores the number of white and black pieces threatening the squares next to the two kings
+    ]
 is_player_white = True
-#A list to store how many times the white and black Pawn of Pawns have reached the end of the board
-pofp_ended = [0,0]
+pofp_ended = [0,0]#A list to store how many times the white and black Pawn of Pawns have reached the end of the board
+is_pofp_moveable = False
+king_swapped = [False,False]
+current_rulers = ["wK","bK"]
+game_drawn = False
+swap_made = [False,False]
 class Move():
     def __init__(self, start_sq,end_sq, board):
         self.start_row = start_sq[0]
@@ -48,8 +42,25 @@ class Move():
 def make_move(board,move):
     #Makes a move on the board
     new_board = board
-    new_board[move.start_row][move.start_col] = "-"
-    new_board[move.end_row][move.end_col] = move.piece_moved
+    if board[move.start_row][move.start_col][1] == "K":
+        #Check if it's a king being swapped
+        king_color = board[move.start_row][move.start_col][0]
+        if board[move.end_row][move.end_col][0] not in ["w","b","-"]:
+            move_color = board[move.end_row][move.end_col][1]
+        else:
+            move_color = board[move.end_row][move.end_col][0]
+            
+        if move_color == king_color:
+            new_board[move.start_row][move.start_col] = move.piece_captured
+            new_board[move.end_row][move.end_col] = move.piece_moved
+            n = 0 if move_color == "w" else 1
+            king_swapped[n] = True
+        else:
+            new_board[move.start_row][move.start_col] = "-"
+            new_board[move.end_row][move.end_col] = move.piece_moved
+    else:        
+        new_board[move.start_row][move.start_col] = "-"
+        new_board[move.end_row][move.end_col] = move.piece_moved
     return new_board
 
 def who_is_moving(board,location):
@@ -64,8 +75,7 @@ def who_is_moving(board,location):
         return True
     if piece == "b":
         return False
-
-
+            
 def promote_pieces(board,pofpended):
     #Promotes all pieces at the end of the turn
     pofp_ended = pofpended
@@ -86,7 +96,7 @@ def promote_pieces(board,pofpended):
                             board[7][6] = "pwP"
                             pofp_ended[0] += 1
                         elif pofp_ended[0] == 3:
-                            board[x][y] = "wP"
+                            board[x][y] = "wA"
                     else:
                         bpawn_moved = True
                         if pofp_ended[1] == 0:
@@ -96,7 +106,7 @@ def promote_pieces(board,pofpended):
                             board[2][6] = "pbP"
                             pofp_ended[1] += 1
                         elif pofp_ended[1] == 3:
-                            board[x][y] = "bP"
+                            board[x][y] = "bA"
                 
                 else:
                     board[x][y] = board[x][y][1:]
