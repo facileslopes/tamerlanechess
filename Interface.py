@@ -29,7 +29,8 @@ def load_pieces():
             for c in piece_types:
                 piece = a+b+c
                 piece_sprites[piece] = pygame.image.load(sprites_loc + "Pieces/" + piece + ".png")    
-
+    piece_sprites["wA"] = pygame.image.load(sprites_loc + "Pieces/wA.png")
+    piece_sprites["bA"] = pygame.image.load(sprites_loc + "Pieces/bA.png")
 def init_board(white,black):
     #This function will initialise the board
     #First initialises of values
@@ -74,7 +75,7 @@ def highlight_squares(gamestate,valid_moves,squares_selected):
         if len(valid_moves) != 0:
             for move in valid_moves:
                 screen.blit(hl, (move[1]*sq_dim, move[0]*sq_dim))
-    
+      
 def main():
     pygame.init()
     setup = ""
@@ -89,12 +90,11 @@ def main():
         screen.fill( (0,0,0) )
         if setup == "":
             #Asking which setup the player wants to play with.
-            #First initialising colors and fonts: 
             lfont = pygame.font.SysFont("Times New Roman.tff", 50)
             mfont = pygame.font.SysFont("Times New Roman.tff", 35)
             white = (255,255,255)
             black = (0,0,0)
-            #Then drawing title and buttons
+            #Drawing title and buttons
             setup_q = lfont.render("What setup do you wish to play?", True, white,black)
             screen.blit(setup_q, [width/30, height/20])
             #Masculine setup
@@ -158,7 +158,6 @@ def main():
             sq_selected = False
             clicked_squares = []
             available_moves = []
-            Engine.ZonesOfControls = Ruleset.Rules.update_zocs(Engine.game_state)
             while True:
                 init_board(light_col,dark_col)
                 display_gamestate(Engine.game_state)
@@ -174,13 +173,19 @@ def main():
                             if Engine.game_state[sq_loc[0] ][sq_loc[1] ] != "-" and Engine.game_state[sq_loc[0] ][sq_loc[1] ] != "N/A":
                                 clicked_squares.append(sq_loc)
                                 if Engine.is_player_white == Engine.who_is_moving(Engine.game_state,clicked_squares[0]):
+                                    color = 0 if Engine.is_player_white else 1
                                     #Check if a pawn of pawn that has reached the end of the board can be moved
                                     if Ruleset.Rules.check_if_pofp_canmove(Engine.game_state,Engine.is_player_white):
-                                        if Engine.game_state[sq_loc[0] ][sq_loc[1] ] in ["pbB","pwP"]:
+                                        if Ruleset.Rules.is_ruler_check(Engine.game_state,Engine.current_rulers[color]):
                                             sq_selected = True
                                             rule_check = Ruleset.Rules( [clicked_squares[0][0], clicked_squares[0][1] ], Engine.game_state)
                                             available_moves = rule_check.map_piece_to_rule()
-                                            available_moves = rule_check.check_king_vulnerable(available_moves)
+                                            available_moves = rule_check.check_ruler_vulnerable(available_moves,Engine.current_rulers[color])
+                                        elif Engine.game_state[sq_loc[0] ][sq_loc[1] ] in ["pbB","pwP"]:
+                                            sq_selected = True
+                                            rule_check = Ruleset.Rules( [clicked_squares[0][0], clicked_squares[0][1] ], Engine.game_state)
+                                            available_moves = rule_check.map_piece_to_rule()
+                                            available_moves = rule_check.check_ruler_vulnerable(available_moves,Engine.current_rulers[color])
                                         else:
                                             clicked_squares = []
                                     else:
@@ -188,7 +193,7 @@ def main():
                                         sq_selected = True
                                         rule_check = Ruleset.Rules( [clicked_squares[0][0], clicked_squares[0][1] ], Engine.game_state)
                                         available_moves = rule_check.map_piece_to_rule()
-                                        available_moves = rule_check.check_king_vulnerable(available_moves)
+                                        available_moves = rule_check.check_ruler_vulnerable(available_moves,Engine.current_rulers[color])
                                 else:
                                     clicked_squares = []
                         else:#If piece has been selected, move it to the location
@@ -204,9 +209,35 @@ def main():
                                         Engine.game_state = Engine.make_move( Engine.game_state, move )
                                         Engine.is_player_white = not(Engine.is_player_white)
                                 Engine.pofp_ended = Engine.promote_pieces(Engine.game_state, Engine.pofp_ended)
+                                if Ruleset.Rules.is_ruler_mated(Engine.game_state,Engine.current_rulers[color]):
+                                    if Engine.is_player_white:
+                                        screen.fill( (0,0,0) )
+                                        winner_m = lfont.render("Black wins!",True,white,black)
+                                        screen.blit(winner_m, [width/30,height/20])
+                                        pygame.display.flip()
+                                    else:
+                                        screen.fill( (0,0,0) )
+                                        winner_m = lfont.render("White wins!",True,white,black)
+                                        screen.blit(winner_m, [width/30,height/20])
+                                        pygame.display.flip()
+                                    time.sleep(5)
+                                    sys.exit()
+                                Ruleset.Rules.citadel_check(Engine.game_state)
+                                if Engine.game_drawn:
+                                    if Engine.swap_made[0]:
+                                        pass    
+                                    elif Engine.swap_made[1]:
+                                        pass
+                                    else:
+                                        screen.fill( (0,0,0) )
+                                        draw_m = lfont.render("Game drawn!",True,white,black)
+                                        screen.blit(draw_m, [width/30,height/20])
+                                        pygame.display.flip()
+                                        time.sleep(5)
+                                        sys.exit()
                                 clicked_squares = []
-                                Engine.ZonesOfControls = Ruleset.Rules.update_zocs(Engine.game_state)
-
+                                Ruleset.Rules.find_current_ruler(Engine.game_state)
+                                
 if __name__ == "__main__":
     main()
 else:
