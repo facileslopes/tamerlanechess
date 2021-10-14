@@ -2,7 +2,6 @@
 import pygame
 import Engine
 import Ruleset
-import GameAI
 import time
 import sys
 #Initialising some variables and stuff here
