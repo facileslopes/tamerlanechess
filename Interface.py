@@ -89,8 +89,6 @@ def game_drawn_screen(font):
 def main():
     pygame.init()
     setup = ""
-    player_colour = ""
-    ai_colour = ""
     piece_selected = False
     clicked_areas = []
     while True:
@@ -132,35 +130,6 @@ def main():
                     setup = "Feminine"
                     Engine.game_state = Engine.f_init_state
                     time.sleep(0.4)
-        elif player_colour == "":
-            #Asking what colour the player wants to play as
-            colour_q = lfont.render("Which colour do you wish to play as?", True, white,black)
-            screen.blit(setup_q, [width/30, height/20])
-            #Playing as White
-            white_button = pygame.Rect( 36 , 120 , 240 , 100)
-            white_option = mfont.render("White", True, black)
-            white_rect = white_option.get_rect()
-            white_rect.center = white_button.center
-            pygame.draw.rect(screen, white, white_button)
-            screen.blit(white_option, white_rect)
-            #Playing as black
-            black_button = pygame.Rect( 36 , 250 , 240 , 100)
-            black_option = mfont.render("Black", True, black)
-            black_rect = black_option.get_rect()
-            black_rect.center = black_button.center
-            pygame.draw.rect(screen, white, black_button)
-            screen.blit(black_option, black_rect)
-            pygame.display.flip()
-            #Checking if a button was clicked
-            click, _, _ = pygame.mouse.get_pressed()
-            if click == 1:
-                mouse = pygame.mouse.get_pos()
-                if white_button.collidepoint(mouse):
-                    player_colour = "White"
-                    ai_colour = "Black"
-                elif fem_button.collidepoint(mouse):
-                    player_colour = "Black"
-                    ai_colour = "White"
         else:
             load_pieces()
             sq_selected = False
