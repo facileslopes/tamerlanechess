@@ -404,17 +404,10 @@ class Rules():
     def citadel_check(gs):
         #Checks whether a king has entered a citadel
         if gs[1][0] == "wK":
-            if Engine.current_rulers[0] == "wK":
-                Engine.game_drawn = True
-            else:
-                Engine.game_drawn = True
-                Engine.swap_made[0] = True
+            Engine.game_drawn = True
         elif gs[8][12] == "bK":
-            if Engine.current_rulers[1] == "bK":
-                Engine.game_drawn = True
-            else:
-                Engine.game_drawn = True
-                Engine.swap_made[1] = True
+            Engine.game_drawn = True
+            
     def map_piece_to_rule(self):
         #Checks the piece to see what rule applies to it
         piece_identity = self.gamestate[ self.location[0] ][ self.location[1] ]

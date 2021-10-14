@@ -15,9 +15,11 @@ height = sq_dim * rows
 piece_sprites = {}
 screen = pygame.display.set_mode((width,height))
 pygame.display.set_caption("Tamerlane Chess")
-sprites_loc = "/Users/donti/Desktop/Programming/Incomplete Projects/Python/Tamerlane Chess/Sprites/"
+sprites_loc = "/Users/donti/Desktop/Programming/Finished Projects/Tamerlane Chess/Sprites/"
 light_col = (232,235,239)
 dark_col = (125,135,150)
+white = (255,255,255)
+black = (0,0,0)
 #Defining functions here
 def load_pieces():
     #This function loads the piece images so that they may be displayed
@@ -28,7 +30,7 @@ def load_pieces():
         for b in colors:
             for c in piece_types:
                 piece = a+b+c
-                piece_sprites[piece] = pygame.image.load(sprites_loc + "Pieces/" + piece + ".png")    
+                piece_sprites[piece] = pygame.image.load(sprites_loc + "Pieces/" + piece + ".png").convert_alpha()    
     piece_sprites["wA"] = pygame.image.load(sprites_loc + "Pieces/wA.png")
     piece_sprites["bA"] = pygame.image.load(sprites_loc + "Pieces/bA.png")
 def init_board(white,black):
@@ -75,7 +77,15 @@ def highlight_squares(gamestate,valid_moves,squares_selected):
         if len(valid_moves) != 0:
             for move in valid_moves:
                 screen.blit(hl, (move[1]*sq_dim, move[0]*sq_dim))
-      
+
+def game_drawn_screen(font):
+    #Displays the game drawn screen
+    screen.fill( (0,0,0) )
+    draw_m = font.render("Game drawn!",True,white,black)
+    screen.blit(draw_m, [width/30,height/20])
+    pygame.display.flip()
+    time.sleep(3)
+    
 def main():
     pygame.init()
     setup = ""
@@ -86,14 +96,12 @@ def main():
     while True:
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
-                sys.exit()
+                return None
         screen.fill( (0,0,0) )
         if setup == "":
             #Asking which setup the player wants to play with.
             lfont = pygame.font.SysFont("Times New Roman.tff", 50)
             mfont = pygame.font.SysFont("Times New Roman.tff", 35)
-            white = (255,255,255)
-            black = (0,0,0)
             #Drawing title and buttons
             setup_q = lfont.render("What setup do you wish to play?", True, white,black)
             screen.blit(setup_q, [width/30, height/20])
@@ -165,7 +173,7 @@ def main():
                 pygame.display.flip()
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:#For quitting the game
-                        sys.exit()
+                        return None
                     elif event.type == pygame.MOUSEBUTTONDOWN: #Finding out where the player clicks their mouse
                         mouse_loc = pygame.mouse.get_pos()
                         sq_loc = [ mouse_loc[1] // sq_dim, mouse_loc[0]//sq_dim  ]
@@ -220,25 +228,78 @@ def main():
                                         winner_m = lfont.render("White wins!",True,white,black)
                                         screen.blit(winner_m, [width/30,height/20])
                                         pygame.display.flip()
-                                    time.sleep(5)
-                                    sys.exit()
+                                    time.sleep(3)
+                                    return None
                                 Ruleset.Rules.citadel_check(Engine.game_state)
                                 if Engine.game_drawn:
-                                    if Engine.swap_made[0]:
-                                        pass    
-                                    elif Engine.swap_made[1]:
+                                    if not(Engine.swap_made[0]) and not(Engine.is_player_white) and Engine.current_rulers[0] == "-":
+                                        #If White can swap with a prince or adventice, first check what royal pieces the player has
+                                        player_royal_pieces = []
+                                        for x in range(rows):
+                                            for y in range(columns):
+                                                if Engine.game_state[x][y] in ["wP","wA"]:
+                                                    player_royal_pieces.append(Engine.game_state[x][y])
+                                        #First ask the player whether they want to draw the game or swap a piece
+                                        screen.fill(black)
+                                        draw_q = lfont.render("Do you wish to draw the game or make a swap?", True, white,black)
+                                        screen.blit(setup_q, [width/30, height/20])
+                                        #Then display options for the player to choose from
+                                        #Draw option
+                                        y = 120
+                                        draw_button = pygame.Rect( 36 , y  , 240 , 100)
+                                        draw_option = mfont.render("Draw Game", True, black)
+                                        draw_rect = draw_option.get_rect()
+                                        draw_rect.center = draw_button.center
+                                        pygame.draw.rect(screen, white, draw_button)
+                                        screen.blit(draw_option, draw_rect)
+                                        y += 130
+                                        #Then the swap options
+                                        option_buttons = {}
+                                        for piece in player_royal_pieces:
+                                            o_button = pygame.Rect( 36 , y  , 360 , 100)
+                                            if piece == "wP":
+                                                text = "Swap with white prince"
+                                            else:
+                                                text = "Swap with white adventice"
+                                            o_option = mfont.render(text, True, black)
+                                            o_rect = o_option.get_rect()
+                                            o_rect.center = o_button.center
+                                            pygame.draw.rect(screen, white, o_button)
+                                            screen.blit(o_option, o_rect)
+                                            y += 130
+                                            option_buttons[piece] = o_rect
+                                        pygame.display.flip()
+                                        option_chosen = False
+                                        while not(option_chosen):
+                                            for event in pygame.event.get():
+                                                if event.type == pygame.QUIT:#For quitting the game
+                                                    return None
+                                            if pygame.mouse.get_pressed()[0] == 1:
+                                                pos = pygame.mouse.get_pos()
+                                                if draw_rect.collidepoint(pos):
+                                                    game_drawn_screen(lfont)
+                                                    return None
+                                                for piece in option_buttons:
+                                                    if option_buttons[piece].collidepoint(pos) == 1:
+                                                        for x in range(rows):
+                                                            for y in range(columns):
+                                                                if Engine.game_state[x][y] == piece:
+                                                                    screen.fill((0,0,0))
+                                                                    Engine.game_state[x][y] = "wK"
+                                                                    Engine.game_state[1][0] = piece
+                                                                    option_chosen = True
+                                                                    break
+                                    elif not(Engine.swap_made[1]) and not(Engine.is_player_white) and Engine.current_rulers[1] == "-":
+                                        #If Black can swap with a prince or adventice
                                         pass
                                     else:
-                                        screen.fill( (0,0,0) )
-                                        draw_m = lfont.render("Game drawn!",True,white,black)
-                                        screen.blit(draw_m, [width/30,height/20])
-                                        pygame.display.flip()
-                                        time.sleep(5)
-                                        sys.exit()
+                                        game_drawn_screen(lfont)
+                                        return None
                                 clicked_squares = []
                                 Ruleset.Rules.find_current_ruler(Engine.game_state)
                                 
 if __name__ == "__main__":
     main()
+    pygame.quit()
 else:
     print("This module is being imported")
