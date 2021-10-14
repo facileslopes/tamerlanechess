@@ -15,7 +15,7 @@ height = sq_dim * rows
 piece_sprites = {}
 screen = pygame.display.set_mode((width,height))
 pygame.display.set_caption("Tamerlane Chess")
-sprites_loc = "/Users/donti/Desktop/Programming/Finished Projects/Tamerlane Chess/Sprites/"
+sprites_loc = ""
 light_col = (232,235,239)
 dark_col = (125,135,150)
 white = (255,255,255)
