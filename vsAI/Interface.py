@@ -130,41 +130,6 @@ def main():
                     Engine.game_state = Engine.f_init_state
                     time.sleep(0.4)
                     
-        if setup == "":
-            #Asking which setup the player wants to play with.
-            lfont = pygame.font.SysFont("Times New Roman.tff", 50)
-            mfont = pygame.font.SysFont("Times New Roman.tff", 35)
-            #Drawing title and buttons
-            setup_q = lfont.render("What setup do you wish to play?", True, white,black)
-            screen.blit(setup_q, [width/30, height/20])
-            #Masculine setup
-            masc_button = pygame.Rect( 36 , 120  , 240 , 100)
-            masc_option = mfont.render("Masculine Setup", True, black)
-            masc_rect = masc_option.get_rect()
-            masc_rect.center = masc_button.center
-            pygame.draw.rect(screen, white, masc_button)
-            screen.blit(masc_option, masc_rect)
-            #Feminine setup
-            fem_button = pygame.Rect( 36 , 250  , 240, 100)
-            fem_option = mfont.render("Feminine Setup", True, black)
-            fem_rect = fem_option.get_rect()
-            fem_rect.center = fem_button.center
-            pygame.draw.rect(screen, white, fem_button)
-            screen.blit(fem_option, fem_rect)
-            pygame.display.flip()
-            #Checking if a button was clicked
-            click, _, _ = pygame.mouse.get_pressed()
-            if click == 1:
-                mouse = pygame.mouse.get_pos()
-                if masc_button.collidepoint(mouse):
-                    setup = "Masculine"
-                    Engine.game_state = Engine.m_init_state
-                    time.sleep(0.4)
-                elif fem_button.collidepoint(mouse):
-                    setup = "Feminine"
-                    Engine.game_state = Engine.f_init_state
-                    time.sleep(0.4)
-                    
         elif Engine.player_colour == "":
             #Drawing title and buttons
             setup_q = lfont.render("What colour do you wish to play as?", True, white,black)
