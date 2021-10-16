@@ -8,7 +8,17 @@ class Rules():
     def __init__(self,location,gamestate):
         self.location = location
         self.gamestate = gamestate
-
+        self.identity = gamestate[location[0]][location[1]]
+        if self.identity[0] == "p":
+            self.color = self.identity[1]
+            if self.identity[2] == "P":
+                self.piece = "pP"
+            else:
+                self.piece = "p"
+        else:
+            self.color = self.identity[0]
+            self.piece = self.identity[1]
+        
     def transform_piece(self,transforms):
         #Applies each given move to a piece to find where it's moved to
         possible_moves = []
@@ -19,19 +29,18 @@ class Rules():
     def check_bounds(self,moves):
         #Makes sure the piece isn't moving anywhere it can't
         valid_moves = []
-        color = Rules.find_piece_color(self,location=self.location)
         for move in moves:
             if move[0] >= 0 and move[0] < rows and move[1] >= 0 and move[1] < columns:
                 #If the move is within the 10 rows and 13 columns
                 if self.gamestate[move[0]][move[1]] != "N/A":
                     #If the move isn't to an absent tile
-                    valid_moves.append(move)
-        for move in moves:
-            #Check if the piece is moving onto an immune pawn of pawn
-            if move[0] in [0,9]:
-                if self.gamestate[move[0]][move[1]] in ["pwP","pbP"]:
-                    valid_moves.remove(move)
-        if self.gamestate[ self.location[0] ][ self.location[1] ][1] not in ["K","A"]:
+                    if move[0] in [0,9]:
+                        if self.gamestate[move[0]][move[1]] not in ["pwP","pbP"]:#Check if the piece is moving onto an immune pawn of pawn
+                            valid_moves.append(move)
+                    else:
+                        valid_moves.append(move)
+
+        if self.piece not in ["K","A"]:
             #Check if the correct piece is entering a citadel
             if (1,0) in valid_moves:
                 valid_moves.remove( (1,0) )
@@ -39,8 +48,8 @@ class Rules():
                 valid_moves.remove( (8,12) )
         else:
             #Handles entering citadels for royal pieces
-            if color == "w":
-               if self.gamestate[ self.location[0] ][ self.location[1] ][1] == "A":
+            if self.color == "w":
+               if self.piece == "A":
                    if (1,0) in valid_moves:
                        valid_moves.remove( (1,0) )
                else: 
@@ -50,7 +59,7 @@ class Rules():
                        if (1,0) in valid_moves:
                            valid_moves.remove( (1,0) )
             else:
-               if self.gamestate[ self.location[0] ][ self.location[1] ][1] == "A":
+               if self.piece == "A":
                    if (8,12) in valid_moves:
                        valid_moves.remove( (8,12) )
                else: 
@@ -71,9 +80,8 @@ class Rules():
     def piece_capturing(self, moves):
         #Checks whether a piece is moving into a tile with a piece of the same colour on it
         valid_moves = []
-        piece_color = Rules.find_piece_color(self,self.location)
         for move in moves:
-            if piece_color != Rules.find_piece_color(self,move):
+            if self.color != Rules.find_piece_color(self,move):
                 valid_moves.append(move)
         return valid_moves
     def long_piece_pathing(self,directions):
@@ -117,7 +125,7 @@ class Rules():
     def PawnMoves(self):
         #Pawns move like pawns in Chess
         #Once they reach the end of the board, they are promoted to their respective pieces
-        if Rules.find_piece_color(self,location=self.location) == "w":
+        if self.color == "w":
             valid_moves = Rules.transform_piece( self,[[-1,0] , [-1,-1] , [-1,1]] )
         else:
             valid_moves = Rules.transform_piece( self, [[1,0] , [1,1] , [1,-1]] )
@@ -201,6 +209,10 @@ class Rules():
                     if x:
                         can_move = True
             n += 1
+        valid_moves_copy = copy.deepcopy(valid_moves)
+        for move in valid_moves_copy:
+            if move ==  (1,0) or move == (8,12):
+                valid_moves.remove(move)
         return valid_moves
 
     def PrinceMoves(self):
@@ -211,16 +223,16 @@ class Rules():
         #An adventice king moves like a prince but can enter it's own citadel
         valid_moves =  Rules.return_valid_moves( self, [[0,1], [1,0] ,[-1,0], [0,-1],[1,1], [1,-1] ,[-1,1], [-1,-1]] )
         return valid_moves
-    def PawnOfPawnsRules(self):
+    def PawnOfPawnMoves(self):
         #The pawn of pawns acts as a regular pawn until it moves to the final square, where it remains until a situation develops
         #where it guarantee a capture on any piece on the board, then it may be moved there.
         #When it reaches the end of the board a second time, it is moved to the square it started from
         #The third time it reaches the end of the board, it becomes a prince
 
         #First move it like a regular pawn
-        end_row = 0 if Rules.find_piece_color(self,self.location) == "w" else 9
+        end_row = 0 if self.color == "w" else 9
         if self.location[0] != end_row:
-            if Rules.find_piece_color(self,location=self.location) == "w":
+            if self.color == "w":
                 valid_moves = Rules.transform_piece( self,[[-1,0] , [-1,-1] , [-1,1]] )
             else:
                 valid_moves = Rules.transform_piece( self, [[1,0] , [1,1] , [1,-1]] )
@@ -242,7 +254,7 @@ class Rules():
             valid_moves = []
             valid_moves2 = []
             #Then find the pawn's color and where it can move to capture a piece
-            if Rules.find_piece_color(self,self.location) == "w":
+            if self.color == "w":
                 capture_dir = ([-1,-1],[-1,1])
             else:
                 capture_dir = [[1,-1],[1,1]]
@@ -285,12 +297,11 @@ class Rules():
             
     def immobile_pieces(self):
         #Find a list of pieces that cannot be moved
-        color = Rules.find_piece_color(self,self.location)
         immobiles = []
         for x in range(rows):
             for y in range(columns):
-                if self.gamestate[x][y] not in ["pwP","pbP","-","N/A"]:
-                    if self.gamestate[x][y][1] != "K" and Rules.find_piece_color(self,[x,y]) != color: 
+                if self.identity not in ["pwP","pbP","-","N/A"]:
+                    if self.gamestate[x][y] not in Engine.current_rulers and Rules.find_piece_color(self,[x,y]) != self.color: 
                         piece = Rules([x,y], self.gamestate)
                         moves = piece.map_piece_to_rule()
                         if len(moves) == 0:
@@ -302,14 +313,13 @@ class Rules():
         #Moves like a King in chess
         valid_moves = Rules.return_valid_moves( self, [[0,1], [1,0] ,[-1,0], [0,-1],[1,1], [1,-1] ,[-1,1], [-1,-1]] )
         if self.gamestate[self.location[0]][self.location[1]] in Engine.current_rulers:
-            color = Rules.find_piece_color(self,location=self.location)
-            colorint = 0 if color == "w" else 1
+            colorint = 0 if self.color == "w" else 1
             if Rules.is_ruler_check(self.gamestate,Engine.current_rulers[colorint]):
                 #Check if the piece can be swapped with one of it's own pieces
                 if not(Engine.king_swapped[colorint]):
                     for x in range(rows):
                         for y in range(columns):
-                            if self.gamestate[x][y] not in ["-","N/A","wK","bK","wA","wP"] and color == Rules.find_piece_color(self,[x,y]):
+                            if self.gamestate[x][y] not in ["-","N/A","wK","bK","wA","wP"] and self.color == Rules.find_piece_color(self,[x,y]):
                                 if (x,y) not in valid_moves:
                                     valid_moves.append((x,y))
         return valid_moves
@@ -336,11 +346,15 @@ class Rules():
         piece = self.gamestate[self.location[0]][self.location[1]]
         gs = copy.deepcopy(self.gamestate)
         gs[self.location[0]][self.location[1]] = "-"
+        ruler_found = False
         gs[move[0]][move[1]] = piece
         for x in range(rows):
             if ruler in gs[x]:
                 xloc = x
                 yloc = gs[x].index(ruler)
+                ruler_found = True
+        if ruler_found == False:
+            return ruler_found
         for x in range(rows):
             for y in range(columns):
                 if gs[x][y] not in ["-","N/A"]:
@@ -410,37 +424,10 @@ class Rules():
             
     def map_piece_to_rule(self):
         #Checks the piece to see what rule applies to it
-        piece_identity = self.gamestate[ self.location[0] ][ self.location[1] ]
-        if piece_identity[0] == "p":
-            if piece_identity[2] == "P":
-                return Rules.PawnOfPawnsRules(self)
-            else:
-                return Rules.PawnMoves(self)
-        else:
-            piece_identity = piece_identity[1]
-            if piece_identity == "C":
-                return Rules.CamelMoves(self)
-            elif piece_identity == "D":
-                return Rules.DabbabaMoves(self)
-            elif piece_identity == "E":
-                return Rules.ElephantMoves(self)
-            elif piece_identity == "R":
-                return Rules.RookMoves(self)
-            elif piece_identity == "N":
-                return Rules.HorseMoves(self)
-            elif piece_identity == "S":
-                return Rules.ScoutMoves(self)
-            elif piece_identity == "G":
-                return Rules.GiraffeMoves(self)
-            elif piece_identity == "V":
-                return Rules.VizierMoves(self)
-            elif piece_identity == "K":
-                return Rules.KingMoves(self)
-            elif piece_identity == "P":
-                return Rules.PrinceMoves(self)
-            elif piece_identity == "A":
-                return Rules.AdventiceMoves(self)
-            else:
-                return Rules.MinisterMoves(self)
+        piece_to_rule = {"C":Rules.CamelMoves,"D":Rules.DabbabaMoves,"E":Rules.ElephantMoves,
+                         "R":Rules.RookMoves,"N":Rules.HorseMoves,"S":Rules.ScoutMoves,"G":Rules.GiraffeMoves,
+                         "V":Rules.VizierMoves,"K":Rules.KingMoves,"M":Rules.MinisterMoves,"P":Rules.PrinceMoves,
+                         "A":Rules.AdventiceMoves,"p":Rules.PawnMoves,"pP":Rules.PawnOfPawnMoves}
+        return piece_to_rule[self.piece](self)
          
 

@@ -30,6 +30,8 @@ king_swapped = [False,False]
 current_rulers = ["wK","bK"]
 game_drawn = False
 swap_made = [False,False]
+player_colour = ""
+ai_colour = ""
 class Move():
     def __init__(self, start_sq,end_sq, board):
         self.start_row = start_sq[0]
@@ -38,7 +40,7 @@ class Move():
         self.end_col = end_sq[1]
         self.piece_moved = board[self.start_row][self.start_col]
         self.piece_captured = board[self.end_row][self.end_col]
-
+        
 def make_move(board,move):
     #Makes a move on the board
     new_board = board
